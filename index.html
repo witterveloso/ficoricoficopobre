@@ -436,6 +436,7 @@ input,select,textarea{font-size:16px!important}
 .g-tot span{font-size:13px;color:var(--muted);font-weight:600} .g-tot b{font-family:var(--f-display);font-size:22px;color:#B45309} .g-tot small{color:var(--muted)}
 .glist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .gitem{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff}
+.f-local{grid-column:1/-1} .localrow{display:flex;gap:8px} .localrow input{flex:1;min-width:0} .localrow .btn{white-space:nowrap;padding:0 12px} .localinfo{display:block;margin-top:6px;color:var(--muted);font-size:12.5px} .linkbtn{all:unset;cursor:pointer;color:var(--accent,#0F7A43);text-decoration:underline}
 .gitem:hover{border-color:#F59E0B} .gitem:focus-visible{outline:3px solid #F59E0B;outline-offset:2px}
 .gdia{display:flex;flex-direction:column;align-items:center;background:#FFF4DB;border-radius:10px;padding:4px 0}
 .gdia small{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700} .gdia b{font-family:var(--f-display);font-size:20px;line-height:1}
@@ -793,8 +794,8 @@ function render(){
   const doMes = contas.filter(c=>visivel(c,k)).sort((a,b)=>diaNo(a,k)-diaNo(b,k) || String(a.nome).localeCompare(b.nome));
   let total=0, pg=0, venc=0, vencV=0, prox=null;
   for(const c of doMes){
-    const v=valorNo(c,k); total+=v;
-    if(pago(c,k)) pg+=v; else { const s=status(c,k); if(s.late){ venc++; vencV+=v; } else if(!prox && !ehGasto(c)) prox=c; }
+    const v=valorNo(c,k);
+    if(pago(c,k)){ total+=v; pg+=v; } else { const s=status(c,k); if(s.late && !ehGasto(c)){ venc++; vencV+=v; } else { total+=v; if(!prox && !ehGasto(c)) prox=c; } }
   }
   $("total").textContent = fmt(total);
   $("sPago").textContent = fmt(pg);
@@ -814,7 +815,7 @@ function render(){
   $("entTot").textContent = fmt(renda) + (ar.v>0?` · ${arTxt}`:"");
   $("topEnt").textContent = fmt(renda);
   $("topEntN").textContent = ar.v>0 ? arTxt : (ents.length?"Tudo recebido":"");
-  const totalSaldo = doMes.filter(c=>noSaldo(c,k)).reduce((a,c)=>a+valorNo(c,k),0), foraSaldo = total-totalSaldo;
+  const totalSaldo = doMes.filter(c=>noSaldo(c,k)).reduce((a,c)=>a+valorNo(c,k),0), foraSaldo = vencV;
   $("topGas").textContent = fmt(totalSaldo);
   const so = $("sobra");
   if(renda>0){ const r=renda-totalSaldo; so.textContent = (r>=0?"Sobra ":"Falta ")+fmt(Math.abs(r))+" depois das contas"; so.className="sobra "+(r>=0?"pos":"neg"); }
@@ -826,7 +827,7 @@ function render(){
 
   // categorias
   const porCat = {};
-  doMes.forEach(c=>{ porCat[c.categoria||"Outros"]=(porCat[c.categoria||"Outros"]||0)+valorNo(c,k); });
+  doMes.filter(c=>noSaldo(c,k)).forEach(c=>{ porCat[c.categoria||"Outros"]=(porCat[c.categoria||"Outros"]||0)+valorNo(c,k); });
   const cats = Object.entries(porCat).sort((a,b)=>b[1]-a[1]);
   $("cats").hidden = !total;
   $("catBar").innerHTML = cats.map(([n,v])=>`<i title="${esc(n)}" style="width:${v/total*100}%;background:${catColor(n)}"></i>`).join("");
@@ -882,7 +883,7 @@ function renderGastos(k,G){
   desenharToggle("gastos",G.length,"");
   $("gList").innerHTML=G.map(c=>`<li data-id="${esc(c.id)}"><button type="button" class="gitem" data-gedit aria-label="Editar ${esc(c.nome)}">
     <span class="gdia"><small>dia</small><b>${diaNo(c,k)}</b></span>
-    <span class="gbody"><span class="nome">${esc(c.nome)}</span><span class="meta"><span><i class="dot" style="background:${catColor(c.categoria)}"></i> ${esc(c.categoria||"Outros")}</span>${quemTxt(c,k).replace("paga por","por")}${extrasTxt(c)}${obsTxt(c)}</span></span>
+    <span class="gbody"><span class="nome">${esc(c.nome)}</span><span class="meta"><span><i class="dot" style="background:${catColor(c.categoria)}"></i> ${esc(c.categoria||"Outros")}</span>${quemTxt(c,k).replace("paga por","por")}${localTxt(c)}${extrasTxt(c)}${obsTxt(c)}</span></span>
     <span class="gval">${fmt(valorNo(c,k))}</span></button></li>`).join("");
 }
 function renderFormGasto(host,c,isNew,k,mes){
@@ -894,6 +895,7 @@ function renderFormGasto(host,c,isNew,k,mes){
     <div class="field f-cat"><label class="label" for="fCat">Categoria</label><select id="fCat">${CATS.map(([n])=>`<option ${n===c.categoria?"selected":""}>${n}</option>`).join("")}${temCat("Outros")?"":`<option ${c.categoria==="Outros"?"selected":""}>Outros</option>`}</select></div>
     <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="decimal" placeholder="0,00" value="${isNew?"":fmtIn(valorNo(c,k))}"></div>
     <div class="field f-dia"><label class="label" for="fDia">Dia</label><input id="fDia" type="number" min="1" max="31" value="${esc(c.dia)}"></div>
+    ${localHtml(c)}
     ${camposHtml(c)}
     ${obsHtml("fObs",c.obs,TAGS_C)}
     <p class="f-err" id="fErr" hidden></p>
@@ -905,6 +907,7 @@ function renderFormGasto(host,c,isNew,k,mes){
     </div>
   </form>`;
   host.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{ $("fNome").value=b.dataset.at; $("fCat").value=b.dataset.cat; host.querySelectorAll("[data-at]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("fValor").focus(); });
+  ligarLocal();
   (isNew?$("fValor"):$("fNome")).focus();
   $("fCancel").onclick=()=>{ editing=null; render(); };
   $("frm").onsubmit=async e=>{
@@ -915,9 +918,9 @@ function renderFormGasto(host,c,isNew,k,mes){
     if(!(valor>0)) return fail("Digite o valor gasto, por exemplo 150,00.");
     if(!(dia>=1&&dia<=31)) return fail("O dia precisa ser entre 1 e 31.");
     if(isNew){
-      const data={nome,categoria,valor,dia,tipo:"unica",mes:k,natureza:"gasto",pagos:{[k]:{em:new Date().toISOString().slice(0,10),por:meEmail}},valores:{},extras:lerCampos(),obs,criado:Date.now()};
+      const data={nome,categoria,valor,dia,tipo:"unica",mes:k,natureza:"gasto",pagos:{[k]:{em:new Date().toISOString().slice(0,10),por:meEmail}},valores:{},extras:lerCampos(),obs,...lerLocal(),criado:Date.now()};
       await run(()=>store.add("contas",data),"Gasto lançado");
-    } else await run(()=>store.update("contas",c.id,{nome,categoria,valor,dia,extras:lerCampos(),obs,exemplo:false}),"Gasto atualizado");
+    } else await run(()=>store.update("contas",c.id,{nome,categoria,valor,dia,extras:lerCampos(),obs,...lerLocal(),exemplo:false}),"Gasto atualizado");
     editing=null; render();
   };
   const del=$("fDel"); if(del) del.onclick=()=>{ $("delZone").innerHTML=`<button class="btn danger" type="button" id="dAll">Confirmar exclusão</button>`; $("dAll").onclick=async()=>{ await run(()=>store.remove("contas",c.id),"Gasto excluído"); editing=null; render(); }; };
@@ -948,6 +951,7 @@ function renderFormNovo(host, sit, k){
     <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="decimal" placeholder="0,00"></div>
     <div class="field f-dia" id="fDataBox"><label class="label" for="fData">Vence em</label><input id="fData" type="date" value="${dataPadrao("avencer",k)}"></div>
     <div class="field f-tipo" id="fRepBox"><label class="label" for="fTipo">Repete?</label><select id="fTipo"><option value="mensal">Todo mês</option><option value="unica">Só desta vez</option></select></div>
+    <div id="fLocalBox" style="grid-column:1/-1">${localHtml({})}</div>
     ${camposHtml({})}
     ${obsHtml("fObs","",TAGS_C)}
     <p class="note" id="fSitDica" style="text-align:left;margin:0;grid-column:1/-1"></p>
@@ -959,7 +963,7 @@ function renderFormNovo(host, sit, k){
     $("fSitDica").textContent = s_==="gasto" ? `Entra em Gastos do dia a dia com a data de hoje (${now.toLocaleDateString("pt-BR")}), já como pago. Não precisa marcar nada depois.`
       : !d ? "" : d<hoje ? "Essa data já passou: a conta entra como vencida, em atraso, até você marcar como paga." : d===hoje ? "Vence hoje: entra em Contas do mês para você marcar quando pagar." : "Entra em Contas do mês como a vencer, e o app avisa quando estiver perto do vencimento."; };
   const ajustar=(trocou)=>{ const s_=atual();
-    $("fDataBox").hidden = s_==="gasto"; $("fRepBox").hidden = s_==="gasto"; $("fAtalhos").hidden = s_!=="gasto";
+    $("fDataBox").hidden = s_==="gasto"; $("fRepBox").hidden = s_==="gasto"; $("fAtalhos").hidden = s_!=="gasto"; $("fLocalBox").hidden = s_!=="gasto";
     $("fSalvar").textContent = s_==="gasto" ? "Lançar gasto do dia" : "Lançar conta do mês";
     $("fSalvar").className = "btn"+(s_==="gasto"?" gasto":"");
     host.querySelector("form").dataset.sit=s_;
@@ -968,7 +972,7 @@ function renderFormNovo(host, sit, k){
   host.querySelectorAll('input[name="fSit"]').forEach(r=>r.onchange=()=>ajustar(true));
   $("fData").addEventListener("input",dica);
   host.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{ $("fNome").value=b.dataset.at; $("fCat").value=b.dataset.cat; host.querySelectorAll("[data-at]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("fValor").focus(); });
-  ajustar(false); $("fNome").focus();
+  ligarLocal(); ajustar(false); $("fNome").focus();
   $("fCancel").onclick=()=>{ editing=null; render(); };
   $("frm").onsubmit=async e=>{
     e.preventDefault(); const s_=atual(), hoje=iso(now);
@@ -980,7 +984,7 @@ function renderFormNovo(host, sit, k){
     const mesL=data.slice(0,7), dia=+data.slice(8,10);
     const base={nome,categoria,valor,dia,valores:{},extras:lerCampos(),obs,criado:Date.now()};
     let dados, msg;
-    if(s_==="gasto"){ dados=Object.assign(base,{tipo:"unica",mes:mesL,natureza:"gasto",pagos:{[mesL]:{em:hoje,por:meEmail}}}); msg="Gasto do dia lançado"; }
+    if(s_==="gasto"){ dados=Object.assign(base,lerLocal(),{tipo:"unica",mes:mesL,natureza:"gasto",pagos:{[mesL]:{em:hoje,por:meEmail}}}); msg="Gasto do dia lançado"; }
     else { const tipo=$("fTipo").value; dados=Object.assign(base,{tipo,pagos:{},natureza:"conta"}, tipo==="unica"?{mes:mesL}:{inicio:mesL}); msg = data<hoje ? "Conta lançada como vencida" : "Conta do mês lançada"; }
     await run(()=>store.add("contas",dados),msg);
     editing=null;
@@ -1155,6 +1159,40 @@ const marcas=obs=>{ const s=String(obs||""); return Object.keys(REGRAS).filter(k
 function obsHtml(id,valor,tags){
   return `<div class="field f-obs"><label class="label" for="${id}">Observações</label><textarea id="${id}" maxlength="1000" rows="2" placeholder="Ex.: conserto do carro, não se repete. Pagamos com atraso e veio multa.">${esc(valor||"")}</textarea><div class="tagchips">${tags.map(([t,l])=>`<button type="button" data-tag="${t}" data-alvo="${id}" aria-pressed="${String(valor||"").includes(t)}">${l}</button>`).join("")}</div><small class="hint">Toque nas marcações ou escreva livremente. As observações entram na análise de ganhos e perdas.</small></div>`;
 }
+/* ---------- localização do gasto (opcional) ---------- */
+function localHtml(c){
+  const g=c&&c.geo||"";
+  return `<div class="field f-local"><label class="label" for="fLocal">Onde foi? <small style="font-weight:400;color:var(--muted)">(opcional)</small></label>
+    <div class="localrow"><input id="fLocal" maxlength="120" placeholder="Ex.: Padaria Pão Quente, Posto Shell da Av. 9 de Julho" value="${esc(c&&c.local||"")}" autocomplete="off">
+    <button type="button" class="btn ghost" id="fGeoBtn">📍 Onde estou</button></div>
+    <input type="hidden" id="fGeo" value="${esc(g)}">
+    <small class="localinfo" id="fGeoInfo">${g?`Localização marcada. <a href="${mapaUrl(g)}" target="_blank" rel="noopener">Ver no mapa</a> · <button type="button" class="linkbtn" id="fGeoTirar">tirar</button>`:"Escreva o nome do lugar ou toque em “Onde estou” para marcar no mapa."}</small></div>`;
+}
+const mapaUrl=g=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(g);
+function ligarLocal(){
+  const btn=$("fGeoBtn"), info=$("fGeoInfo"); if(!btn) return;
+  const marcado=g=>{ $("fGeo").value=g; info.innerHTML=g?`Localização marcada. <a href="${mapaUrl(g)}" target="_blank" rel="noopener">Ver no mapa</a> · <button type="button" class="linkbtn" id="fGeoTirar">tirar</button>`:"Localização tirada. O nome do lugar continua, se você escreveu."; const t=$("fGeoTirar"); if(t) t.onclick=()=>marcado(""); };
+  const t=$("fGeoTirar"); if(t) t.onclick=()=>marcado("");
+  btn.onclick=()=>{
+    if(!navigator.geolocation){ info.textContent="Este aparelho não permite pegar a localização. Escreva o nome do lugar."; return; }
+    btn.disabled=true; info.textContent="Procurando onde você está…";
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      const g=pos.coords.latitude.toFixed(5)+","+pos.coords.longitude.toFixed(5);
+      marcado(g); btn.disabled=false;
+      if(!$("fLocal").value.trim()){
+        try{
+          const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&accept-language=pt-BR&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+          const j=await r.json(), a=j.address||{};
+          const nome=j.name || [a.road,a.house_number].filter(Boolean).join(", ");
+          const lugar=[nome, a.suburb||a.neighbourhood, a.city||a.town||a.village].filter(Boolean).filter((x,i,arr)=>arr.indexOf(x)===i).join(" · ");
+          if(lugar && !$("fLocal").value.trim()) $("fLocal").value=lugar.slice(0,120);
+        }catch(e){}
+      }
+    }, err=>{ btn.disabled=false; info.textContent = err.code===1 ? "Você não liberou a localização. Tudo bem: escreva o nome do lugar, se quiser." : "Não deu para achar a localização agora. Escreva o nome do lugar, se quiser."; }, {enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+  };
+}
+const lerLocal=()=>({local:($("fLocal")&&$("fLocal").value.trim())||null, geo:($("fGeo")&&$("fGeo").value)||null});
+const localTxt=c=>c.local?`<span class="quem">📍 ${esc(curto(c.local,40))}</span>`:(c.geo?`<span class="quem">📍 local marcado</span>`:"");
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-tag]"); if(!b) return; const ta=$(b.dataset.alvo); if(!ta) return; const t=b.dataset.tag;
   if(ta.value.includes(t)){ ta.value=ta.value.replace(new RegExp("\\s*"+t.replace("#","\\#")+"\\b","g"),"").trim(); b.setAttribute("aria-pressed","false"); }
@@ -1447,7 +1485,7 @@ render();
 /* ---------- Supabase ---------- */
 const APP_URL=new URL("./",location.href).href.split("?")[0].split("#")[0];
 const SB_URL="https://zwlvqrypqajfmzjzbfdj.supabase.co", SB_KEY="sb_publishable_2wvPPLx1Ls8LOzoTtb6Nvg_8w8JESoe";
-const CAMPOS={contas:["nome","categoria","valor","dia","tipo","mes","inicio","fim","valores","pagos","nao_pagas","extras","obs","natureza"],entradas:["fonte","quem","nome","valor","dia","tipo","mes","inicio","fim","valores","obs"],balancos:["casa_id","mes","entradas","fixa","cnpj","saidas","pago","saldo","base"]};
+const CAMPOS={contas:["nome","categoria","valor","dia","tipo","mes","inicio","fim","valores","pagos","nao_pagas","extras","obs","natureza","local","geo"],entradas:["fonte","quem","nome","valor","dia","tipo","mes","inicio","fim","valores","obs"],balancos:["casa_id","mes","entradas","fixa","cnpj","saidas","pago","saldo","base"]};
 function toRow(col,d){ const o={}; for(const [k,v] of Object.entries(d)){ const kk=k==="naoPagas"?"nao_pagas":k; if(CAMPOS[col].includes(kk)) o[kk]=v===undefined?null:v; } return o; }
 function fromRow(col,r){ const o=Object.assign({},r); o.valor=Number(r.valor||0); if(col==="contas"){ o.naoPagas=r.nao_pagas||{}; delete o.nao_pagas; } return o; }
 const numBal=b=>({mes:b.mes,entradas:Number(b.entradas),fixa:Number(b.fixa),cnpj:Number(b.cnpj),saidas:Number(b.saidas),pago:Number(b.pago),saldo:Number(b.saldo),base:b.base==null?null:Number(b.base),observacao:b.observacao||""});
