@@ -292,6 +292,11 @@ h1,h2,h3,.month strong,.listhead h2,.ent-head h2,.form h3,.empty strong{font-fam
 .fb-notas small{font-size:11px;color:var(--muted)} .fb-notas input:checked+span{border-color:var(--rico);background:#E9F8EF} .fb-notas input:focus-visible+span{outline:3px solid var(--rico);outline-offset:2px}
 #fbForm textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;resize:vertical;margin-top:4px}
 .casal-list.adm .acoes a.btn{text-decoration:none}
+.adm-novo{display:flex;flex-direction:column;gap:8px;background:var(--sunk);border-radius:16px;padding:14px;margin-bottom:12px}
+.adm-novo>small{color:var(--muted);font-size:12.5px;line-height:1.4}
+.adm-novo-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.adm-novo label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:700;color:var(--muted)} .adm-novo label small{font-weight:400}
+.adm-novo input,.adm-novo select{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;color:var(--ink)}
 /* porquinho animado no cartão do saldo */
 .pigbox{position:relative;display:inline-block;line-height:0;justify-self:end}
 .pigbox img{display:block;transform-origin:50% 90%}
@@ -723,7 +728,7 @@ a.casal-btn{text-decoration:none;color:inherit}
     <section class="casal-card wide" role="dialog" aria-modal="true" aria-labelledby="admTit">
       <div class="casal-head"><h2 id="admTit">Administração do sistema</h2><button type="button" class="x" data-fechar aria-label="Fechar">✕</button></div>
       <div class="adm-stats" id="admStats"></div>
-      <div class="ptabs" role="tablist"><button type="button" data-atab="pend">Aguardando<span id="admPendN"></span></button><button type="button" data-atab="testes">Testes<span id="admTesN"></span></button><button type="button" data-atab="feedback">Opiniões<span id="admFbN"></span></button><button type="button" data-atab="todos">Usuários</button><button type="button" data-atab="casas">Casas</button></div>
+      <div class="ptabs" role="tablist"><button type="button" data-atab="pend">Aguardando<span id="admPendN"></span></button><button type="button" data-atab="testes">Acessos e testes<span id="admTesN"></span></button><button type="button" data-atab="feedback">Opiniões<span id="admFbN"></span></button><button type="button" data-atab="todos">Usuários</button><button type="button" data-atab="casas">Casas</button></div>
       <div id="admBody"></div>
     </section>
   </div>
@@ -1863,9 +1868,35 @@ function desenharAdmin(){
       return linha(p,`${casaSug?`<button type="button" class="btn" data-a="aprovar" data-casa="${casaSug}">Aprovar na casa ${esc(nomeCasa(casaSug))}</button>`:""}<button type="button" class="btn ${casaSug?"ghost":""}" data-a="nova">${p.tipo_conta==="pessoal"?"Aprovar conta pessoal":"Aprovar com casa nova"}</button><span class="junto"><select data-sel>${'<option value="">Juntar a outra casa…</option>'+opcoesCasa("")}</select><button type="button" class="rm ok" data-a="juntar">Aprovar</button></span><button type="button" class="rm" data-a="bloquear">Recusar</button>`); }).join("")}</ul>`:'<p class="vaz">Ninguém aguardando aprovação. Quando alguém criar um acesso, aparece aqui.</p>';
   } else if(adm.tab==="testes"){
     const T=adm.testes||[];
-    box.innerHTML = T.length ? `<p class="casal-sub">Quem libera aqui entra direto, sem esperar aprovação, ao criar a senha ou entrar com o Google usando o mesmo e-mail. Depois de liberar, avise a pessoa pelo WhatsApp ou e-mail.</p><ul class="casal-list adm">${T.map(t=>{
+    const novo=`<form class="adm-novo" id="admNovo" novalidate>
+      <b>Liberar acesso para um e-mail</b>
+      <small>A pessoa entra direto, sem esperar aprovação, ao criar a senha pelo link de convite ou ao entrar com o Google usando este e-mail.</small>
+      <div class="adm-novo-g">
+        <label>Nome<input id="anNome" maxlength="80" placeholder="Nome da pessoa"></label>
+        <label>E-mail<input id="anEmail" type="email" inputmode="email" maxlength="120" placeholder="email@exemplo.com"></label>
+        <label>WhatsApp <small>(opcional)</small><input id="anZap" type="tel" inputmode="tel" maxlength="20" placeholder="(11) 99999-9999"></label>
+        <label>Tipo de conta<select id="anTipo"><option value="casa">Conta da casa</option><option value="pessoal">Conta pessoal</option></select></label>
+        <label id="anParcBox">E-mail de quem divide <small>(opcional)</small><input id="anParc" type="email" inputmode="email" maxlength="120" placeholder="email@dele(a).com"></label>
+      </div>
+      <p class="a-msg" id="anMsg" role="status"></p>
+      <button class="btn" type="submit" id="anBtn">Liberar acesso</button>
+    </form>`;
+    box.innerHTML = novo + (T.length ? `<p class="casal-sub">Quem libera aqui entra direto, sem esperar aprovação, ao criar a senha ou entrar com o Google usando o mesmo e-mail. Depois de liberar, avise a pessoa pelo WhatsApp ou e-mail.</p><ul class="casal-list adm">${T.map(t=>{
       const temConta=adm.perfis.some(p=>p.email===String(t.email).toLowerCase());
-      return `<li data-tid="${t.id}"><span class="ini"><i class="${t.status==="liberado"?"a":t.status==="recusado"?"x":"vazio"}">${esc((t.nome||"?").charAt(0).toUpperCase())}</i></span><div><b>${esc(t.nome)} <span class="pill ${t.status==="liberado"?"ok":t.status==="recusado"?"bad":"warn"}">${t.status}</span> <span class="pill">${t.tipo==="pessoal"?"só eu":"casa"}</span></b><small>${esc(t.email)}${t.whatsapp?` · WhatsApp ${esc(waFmt(t.whatsapp))}`:""}${t.parceiro_email?` · com ${esc(t.parceiro_email)}`:""} · pediu em ${fmtData(t.criado_em)}${temConta?" · já tem conta":""}</small>${t.motivo?`<small class="quem" style="display:block;margin-top:4px">Como controla hoje: “${esc(t.motivo)}”</small>`:""}<div class="acoes">${t.status!=="liberado"?`<button type="button" class="btn" data-ta="liberar">Liberar teste</button>`:""}${t.status==="pendente"?`<button type="button" class="rm" data-ta="recusar">Recusar</button>`:""}${t.status==="liberado"?`${t.whatsapp?`<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/55${String(t.whatsapp).replace(/^55/,"")}?text=${encodeURIComponent(msgConvite(t))}">Avisar no WhatsApp</a>`:""}<a class="btn ghost" href="mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent("Seu teste do Fico Rico Fico Pobre foi liberado")}&body=${encodeURIComponent(msgConvite(t))}">Avisar por e-mail</a>`:""}</div></div></li>`; }).join("")}</ul>` : `<p class="casal-sub">Nenhum pedido de teste ainda. Divulgue o link do app: na tela de entrada tem o botão “Quero testar o app”.</p>`;
+      return `<li data-tid="${t.id}"><span class="ini"><i class="${t.status==="liberado"?"a":t.status==="recusado"?"x":"vazio"}">${esc((t.nome||"?").charAt(0).toUpperCase())}</i></span><div><b>${esc(t.nome)} <span class="pill ${t.status==="liberado"?"ok":t.status==="recusado"?"bad":"warn"}">${t.status}</span> <span class="pill">${t.tipo==="pessoal"?"só eu":"casa"}</span></b><small>${esc(t.email)}${t.whatsapp?` · WhatsApp ${esc(waFmt(t.whatsapp))}`:""}${t.parceiro_email?` · com ${esc(t.parceiro_email)}`:""} · ${t.motivo==="Cadastrado pelo administrador"?"cadastrado por você":"pediu"} em ${fmtData(t.criado_em)}${temConta?" · já tem conta":""}</small>${t.motivo&&t.motivo!=="Cadastrado pelo administrador"?`<small class="quem" style="display:block;margin-top:4px">Como controla hoje: “${esc(t.motivo)}”</small>`:""}<div class="acoes">${t.status!=="liberado"?`<button type="button" class="btn" data-ta="liberar">Liberar teste</button>`:""}${t.status==="pendente"?`<button type="button" class="rm" data-ta="recusar">Recusar</button>`:""}${t.status==="liberado"?`${t.whatsapp?`<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/55${String(t.whatsapp).replace(/^55/,"")}?text=${encodeURIComponent(msgConvite(t))}">Avisar no WhatsApp</a>`:""}<a class="btn ghost" href="mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent("Seu teste do Fico Rico Fico Pobre foi liberado")}&body=${encodeURIComponent(msgConvite(t))}">Avisar por e-mail</a>`:""}</div></div></li>`; }).join("")}</ul>` : `<p class="casal-sub">Nenhum pedido de teste ainda. Divulgue o link do app: na tela de entrada tem o botão “Quero testar o app”.</p>`);
+    $("anTipo").onchange=()=>{ $("anParcBox").hidden=$("anTipo").value==="pessoal"; };
+    $("admNovo").onsubmit=async e=>{ e.preventDefault(); const m=$("anMsg"); m.className="a-msg";
+      const email=$("anEmail").value.trim().toLowerCase(), parc=$("anParc").value.trim().toLowerCase(), zap=$("anZap").value.replace(/\D/g,"");
+      const ok=x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x);
+      if(!ok(email)){ m.textContent="Confira o e-mail."; m.classList.add("err"); return $("anEmail").focus(); }
+      if(zap && !/^(55)?\d{10,11}$/.test(zap)){ m.textContent="Confira o WhatsApp, com DDD."; m.classList.add("err"); return $("anZap").focus(); }
+      if(parc && (!ok(parc)||parc===email)){ m.textContent="Confira o e-mail de quem divide."; m.classList.add("err"); return $("anParc").focus(); }
+      $("anBtn").disabled=true;
+      const r=await sb.rpc("admin_cadastrar_acesso",{p_nome:$("anNome").value.trim(),p_email:email,p_tipo:$("anTipo").value,p_whatsapp:zap||null,p_parceiro:parc||null});
+      $("anBtn").disabled=false;
+      if(r.error){ m.textContent="Não consegui liberar. Tente de novo."; m.classList.add("err"); return; }
+      toast(r.data==="aprovado"?"Liberado: a pessoa já tinha se cadastrado e foi aprovada.":r.data==="ja_tem_acesso"?"Esse e-mail já tem acesso ao app.":"Acesso liberado. Agora avise a pessoa.");
+      await carregarAdmin(); };
   } else if(adm.tab==="feedback"){
     const F=adm.fbs||[]; const EM=["","😖","😕","😐","🙂","🤩"];
     const notas=F.filter(f=>f.nota); const media=notas.length?(notas.reduce((a,f)=>a+f.nota,0)/notas.length).toFixed(1).replace(".",","):null;
