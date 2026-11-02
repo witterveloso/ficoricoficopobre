@@ -524,15 +524,15 @@ a.casal-btn{text-decoration:none;color:inherit}
     </fieldset>
     <p class="a-msg" id="aMsg" role="status"></p>
     <button class="btn" type="submit" id="aEntrar">Entrar</button>
-    <button class="btn ghost" type="submit" id="aCriar">Primeiro acesso: criar senha</button>
     <button class="today-link" type="button" id="aEsqueci">Esqueci a senha</button>
-    <p class="a-legal">Ao criar uma conta você concorda com os <a href="termos.html">Termos de uso</a> e a <a href="privacidade.html">Política de privacidade</a>. Todo acesso passa pela aprovação do administrador.</p>
-    <div class="t-convite"><span>Ainda não tem acesso?</span><button class="btn teste" type="button" id="tAbrir">🧪 Quero testar o app</button></div>
+    <button class="btn ghost" type="submit" id="aCriar" hidden>Criar minha senha</button>
+    <div class="t-convite" id="tBloco"><span>Ainda não tem acesso?</span><button class="btn teste" type="button" id="tAbrir">🧪 Quero testar o app</button></div>
     <div id="gArea" hidden>
       <div class="a-ou" aria-hidden="true"><span>ou</span></div>
       <div id="gBtn" class="g-btn"></div>
-      <small class="a-dica" style="text-align:center;display:block;margin-top:6px">Primeira vez? Escolha antes o tipo de conta em “Primeiro acesso”.</small>
+      <small class="a-dica" style="text-align:center;display:block;margin-top:6px">Primeira vez? Peça seu teste no botão “Quero testar o app”.</small>
     </div>
+    <p class="a-legal">Ao usar o app você concorda com os <a href="termos.html">Termos de uso</a> e a <a href="privacidade.html">Política de privacidade</a>. Todo acesso passa pela aprovação do administrador.</p>
   </form>
   <form class="auth-card teste-card" id="tForm" novalidate hidden>
     <h2 class="t-tit">🧪 Quero testar o Fico Rico Fico Pobre</h2>
@@ -607,7 +607,7 @@ a.casal-btn{text-decoration:none;color:inherit}
       </form>
       <div class="casal-passos" id="casalPassos" hidden>
         <b>Agora é com ele(a):</b>
-        <ol><li>Abrir <b>witterveloso.github.io/ficoricoficopobre</b> no Safari ou Chrome</li><li>Usar o e-mail convidado e tocar em <b>Primeiro acesso: criar senha</b></li><li>Confirmar pelo link do e-mail</li><li>Aguardar a aprovação do administrador</li></ol>
+        <ol><li>Abrir o link do app no Safari ou Chrome</li><li>Usar o e-mail convidado e tocar em <b>Criar minha senha</b> (o link copiado abaixo já abre nessa tela)</li><li>Confirmar pelo link do e-mail</li><li>Aguardar a aprovação do administrador</li></ol>
         <button type="button" class="btn ghost" id="copiarLink">Copiar link do app</button>
       </div>
       <div class="wa-box" id="waBox">
@@ -1545,6 +1545,8 @@ function dbStore(db){
 render();
 /* ---------- Supabase ---------- */
 const APP_URL=new URL("./",location.href).href.split("?")[0].split("#")[0];
+const LINK_PRIMEIRO=APP_URL+"?primeiro=1";
+const MODO_PRIMEIRO=new URLSearchParams(location.search).has("primeiro");
 const SB_URL="https://zwlvqrypqajfmzjzbfdj.supabase.co", SB_KEY="sb_publishable_2wvPPLx1Ls8LOzoTtb6Nvg_8w8JESoe";
 const CAMPOS={contas:["nome","categoria","valor","dia","tipo","mes","inicio","fim","valores","pagos","nao_pagas","extras","obs","natureza","local","geo"],entradas:["fonte","quem","nome","valor","dia","tipo","mes","inicio","fim","valores","obs"],balancos:["casa_id","mes","entradas","fixa","cnpj","saidas","pago","saldo","base"]};
 function toRow(col,d){ const o={}; for(const [k,v] of Object.entries(d)){ const kk=k==="naoPagas"?"nao_pagas":k; if(CAMPOS[col].includes(kk)) o[kk]=v===undefined?null:v; } return o; }
@@ -1692,7 +1694,7 @@ $("casalForm").onsubmit=async e=>{
   if(error){ m.textContent=/duplicate|unique/i.test(error.message)?"Já existe um convite para esse e-mail.":"Não consegui registrar o convite. Tente de novo."; m.className="a-msg err"; return; }
   $("cEmail").value=""; $("casalPassos").hidden=false; m.textContent=""; toast("Convite registrado"); await carregarCasa();
 };
-$("copiarLink").onclick=async()=>{ const u=APP_URL; try{ await navigator.clipboard.writeText(u); toast("Link copiado"); }catch(err){ toast(u); } };
+$("copiarLink").onclick=async()=>{ const u=LINK_PRIMEIRO; try{ await navigator.clipboard.writeText(u); toast("Link copiado"); }catch(err){ toast(u); } };
 
 /* ----- personalização ----- */
 let persTab="cats";
@@ -1816,7 +1818,7 @@ $("admBody").addEventListener("click",async e=>{
   const f=e.target.closest("[data-fa]");
   if(f){ const r=await sb.from("feedbacks").update({lido:true}).eq("id",f.closest("li").dataset.fid); if(r.error) return toast("Não consegui salvar."); return carregarAdmin(); }
 });
-function msgConvite(t){ return `Oi, ${String(t.nome||"").split(" ")[0]}! Seu teste do Fico Rico Fico Pobre foi liberado 🎉\n\nEntre em ${APP_URL} e toque em “Primeiro acesso: criar senha” com o e-mail ${t.email} (ou use “Entrar com Google” com esse e-mail).\n\nDepois conta pra gente o que achou no botão 💬 Opinião. Obrigado!`; }
+function msgConvite(t){ return `Oi, ${String(t.nome||"").split(" ")[0]}! Seu teste do Fico Rico Fico Pobre foi liberado 🎉\n\nAbra ${LINK_PRIMEIRO} e toque em “Criar minha senha” com o e-mail ${t.email} (ou use “Entrar com Google” com esse e-mail).\n\nDepois conta pra gente o que achou no botão 💬 Opinião. Obrigado!`; }
 
 /* fechar painéis */
 ["casalPanel","admPanel","persPanel","fbPanel"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.id===id||e.target.closest("[data-fechar]")) $(id).hidden=true; }));
@@ -1828,6 +1830,9 @@ function mostrarAviso(titulo,texto,{admin=false}={}){
   $("avT").textContent=titulo; $("avTx").textContent=texto; $("avAdm").hidden=!admin;
 }
 
+/* ---------- link de convite (?primeiro=1): abre direto em "Criar minha senha" ---------- */
+if(MODO_PRIMEIRO){ $("aCriar").hidden=false; $("aCriar").className="btn"; $("aEntrar").className="btn ghost"; $("aEntrar").textContent="Já tenho senha: entrar"; $("aForm").insertBefore($("aCriar"),$("aEntrar")); $("tBloco").hidden=true;
+  const h=document.querySelector("#aForm .hand"); if(h) h.textContent="Seu acesso foi liberado! 🎉 Digite seu e-mail, escolha uma senha e toque em Criar minha senha."; }
 /* ---------- pedido para testar ---------- */
 $("tAbrir").onclick=()=>{ $("aForm").hidden=true; $("tForm").hidden=false; $("tMsg").textContent=""; if($("aEmail").value) $("tEmail").value=$("aEmail").value; $("tNome").focus(); };
 $("tVoltar").onclick=()=>{ $("tForm").hidden=true; $("aForm").hidden=false; };
@@ -1845,7 +1850,7 @@ $("tForm").onsubmit=async e=>{
   const r=await sb.from("testadores").insert({nome,email,whatsapp:"55"+zap,tipo,parceiro_email:tipo==="casa"?parc:null,motivo});
   $("tEnviar").disabled=false;
   if(r.error){ msg.textContent=/duplicate|unique/i.test(r.error.message)?"Esse e-mail já pediu para testar. Assim que o administrador liberar, você recebe um aviso.":"Não consegui enviar agora. Tente de novo em instantes."; msg.classList.add(/duplicate|unique/i.test(r.error.message)?"ok":"err"); return; }
-  $("tForm").innerHTML=`<h2 class="t-tit">Pedido recebido! 🎉</h2><p>Valeu, ${esc(nome.split(" ")[0])}! Assim que o administrador liberar, você recebe um aviso no WhatsApp.</p><p>Depois é só voltar aqui e tocar em <b>Primeiro acesso: criar senha</b> com o e-mail <b>${esc(email)}</b>, ou entrar com o Google usando esse e-mail.</p><button class="btn ghost" type="button" onclick="location.reload()">Voltar para o login</button>`;
+  $("tForm").innerHTML=`<h2 class="t-tit">Pedido recebido! 🎉</h2><p>Valeu, ${esc(nome.split(" ")[0])}! Assim que o administrador liberar, você recebe um aviso no WhatsApp.</p><p>Na mensagem vem um link: é só abrir e tocar em <b>Criar minha senha</b> com o e-mail <b>${esc(email)}</b>, ou entrar com o Google usando esse e-mail.</p><button class="btn ghost" type="button" onclick="location.reload()">Voltar para o login</button>`;
 };
 
 /* ---------- opinião (feedback) ---------- */
@@ -1914,8 +1919,8 @@ else {
   $("aForm").onsubmit=async ev=>{
     ev.preventDefault();
     const email=$("aEmail").value.trim(), senha=$("aSenha").value, criar=ev.submitter&&ev.submitter.id==="aCriar";
-    if(criar && $("aNovo").hidden){ $("aNovo").hidden=false; $("aCriar").textContent="Criar minha conta"; mostrarLogin("Escolha o tipo de conta e toque em Criar minha conta."); return; }
-    if(!criar && !$("aNovo").hidden){ $("aNovo").hidden=true; $("aCriar").textContent="Primeiro acesso: criar senha"; }
+    if(criar && $("aNovo").hidden && !MODO_PRIMEIRO){ $("aNovo").hidden=false; $("aCriar").textContent="Criar minha conta"; mostrarLogin("Escolha o tipo de conta e toque em Criar minha conta."); return; }
+    if(!criar && !$("aNovo").hidden){ $("aNovo").hidden=true; $("aCriar").textContent="Criar minha senha"; }
     const tipo=(document.querySelector('input[name="aTipo"]:checked')||{}).value||"casa", parc=$("aParc").value.trim().toLowerCase();
     if(!/^\S+@\S+\.\S+$/.test(email)) return mostrarLogin("Digite um e-mail válido.","err");
     if(senha.length<6) return mostrarLogin("A senha precisa ter pelo menos 6 caracteres.","err");
@@ -1929,7 +1934,7 @@ else {
       return entrarNoApp(data.session);
     }
     const {data,error}=await sb.auth.signInWithPassword({email,password:senha});
-    if(error) return mostrarLogin(REDE.test(error.message)?MSG_REDE:/confirm/i.test(error.message)?"Falta confirmar o e-mail: abra a mensagem que enviamos e toque no link.":"E-mail ou senha incorretos. Se ainda não criou sua senha, toque em Primeiro acesso.","err");
+    if(error) return mostrarLogin(REDE.test(error.message)?MSG_REDE:/confirm/i.test(error.message)?"Falta confirmar o e-mail: abra a mensagem que enviamos e toque no link.":"E-mail ou senha incorretos. Se ainda não tem acesso, toque em Quero testar o app.","err");
     entrarNoApp(data.session);
   };
   iniciarGoogle();
