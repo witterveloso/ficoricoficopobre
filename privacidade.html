@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://zwlvqrypqajfmzjzbfdj.supabase.co wss://zwlvqrypqajfmzjzbfdj.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Política de privacidade · Fico Rico Fico Pobre</title>
 <meta name="theme-color" content="#12B76A">
@@ -91,7 +93,7 @@ th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left} td.n,
 <div class="wrap">
   <header><h1>Política de privacidade<small>Fico Rico Fico Pobre</small></h1><a class="voltar" href="./">← Voltar ao app</a></header>
   <article class="doc">
-    <p class="upd">Última atualização: 30 de outubro de 2026</p>
+    <p class="upd">Última atualização: 2 de novembro de 2026</p>
     <p>Esta política explica quais dados o Fico Rico Fico Pobre coleta, para que usa, com quem compartilha e como você pode pedir acesso, correção ou exclusão, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).</p>
     <h2>Quem é o responsável</h2>
     <p>O Fico Rico Fico Pobre é desenvolvido e mantido por Witter Veloso, controlador dos dados tratados no app. Contato para assuntos de privacidade: <a href="mailto:witterveloso@gmail.com">witterveloso@gmail.com</a>.</p>
@@ -126,13 +128,29 @@ th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left} td.n,
       <li><b>OpenAI:</b> transcrição de áudios e interpretação dos comandos enviados pelo WhatsApp.</li>
     </ul>
     <h2>Quem vê seus dados</h2>
-    <p>Na conta pessoal, só você. Na conta da casa, você e a pessoa da casa. O administrador do sistema aprova e bloqueia acessos, mas não vê os valores lançados.</p>
+    <p><b>Seus lançamentos são só seus.</b> Contas, gastos, entradas, valores, observações, metas e locais de gasto são vistos apenas por você, na conta pessoal, ou por você e a pessoa da sua casa, na conta da casa.</p>
+    <ul>
+      <li><b>Nós não acessamos o que você lança.</b> O app foi construído para que nem o administrador nem a equipe do Fico Rico Fico Pobre consigam ver suas contas e valores pelo sistema. O painel do administrador mostra só nome, e-mail, situação do acesso e o nome da casa, nunca os lançamentos.</li>
+      <li><b>Não consultamos seus dados financeiros diretamente no banco de dados.</b> A única exceção é se você pedir ajuda no suporte e autorizar por escrito que olhemos um lançamento específico, ou se houver ordem judicial ou obrigação legal. Nesses casos, olhamos só o necessário e avisamos você.</li>
+      <li><b>Não vendemos, não alugamos e não usamos seus lançamentos para propaganda</b>, nem para treinar inteligência artificial.</li>
+      <li>Os serviços que hospedam o banco de dados (Supabase) guardam as informações criptografadas e não as usam para outros fins.</li>
+    </ul>
     <h2>Por quanto tempo guardamos</h2>
     <p>Enquanto sua conta existir. Se você pedir a exclusão, apagamos seus dados em até 30 dias, exceto o que a lei obrigar a manter.</p>
     <h2>Seus direitos</h2>
     <p>Você pode pedir confirmação de tratamento, acesso, correção, portabilidade, anonimização ou exclusão dos seus dados, e revogar o consentimento, escrevendo para <a href="mailto:witterveloso@gmail.com">witterveloso@gmail.com</a>. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
     <h2>Segurança</h2>
-    <p>Os dados trafegam com criptografia, e cada casa só acessa os próprios registros por regras aplicadas no banco de dados.</p>
+    <p>Usamos várias camadas de proteção:</p>
+    <ul>
+      <li><b>Criptografia:</b> tudo trafega com HTTPS e fica guardado com criptografia no servidor, em São Paulo.</li>
+      <li><b>Isolamento por casa:</b> regras dentro do próprio banco de dados (segurança por linha) fazem cada casa enxergar só os próprios registros. Mesmo que alguém altere o app no navegador, o banco recusa o pedido.</li>
+      <li><b>Acesso só com aprovação:</b> ninguém entra sem ser liberado pelo administrador. Contas bloqueadas perdem o acesso na hora.</li>
+      <li><b>Senhas protegidas:</b> não guardamos sua senha, só uma versão embaralhada (hash) que não pode ser revertida. Novas senhas precisam ter pelo menos 8 caracteres, com letras e números. Você também pode entrar com o Google, sem senha.</li>
+      <li><b>Saída automática:</b> o app sai sozinho depois de 30 minutos sem uso, para proteger quem esquece o celular aberto.</li>
+      <li><b>Proteção contra ataques:</b> o app só carrega conteúdo de fontes autorizadas e há limites contra envio em massa de formulários.</li>
+      <li><b>Sem dados bancários:</b> nunca pedimos senha de banco, número de cartão ou dados de conta bancária.</li>
+    </ul>
+    <p>Se acontecer algum incidente de segurança que possa afetar você, avisaremos você e a ANPD, como manda a LGPD.</p>
     <h2>Mudanças nesta política</h2>
     <p>Se esta política mudar, a data no topo será atualizada e avisaremos no app quando a mudança for importante.</p>
 
