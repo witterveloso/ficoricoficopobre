@@ -733,6 +733,15 @@ const catColor = n => { const c = CATS.find(x=>x[0]===n)||CATS_BASE.find(x=>x[0]
 const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const fmt = v => (v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const fmtIn = v => (v||v===0) ? Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
+
+/* ---------- máscara de dinheiro: digita só números, o app põe pontos e vírgula ---------- */
+function mascaraDinheiro(el){
+  const d=String(el.value).replace(/\D/g,"").replace(/^0+/,"").slice(0,11);
+  el.value = d ? (parseInt(d,10)/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
+  try{ el.setSelectionRange(el.value.length,el.value.length); }catch(e){}
+}
+document.addEventListener("input",e=>{ const t=e.target; if(t && t.matches && t.matches("input[data-money]")) mascaraDinheiro(t); },true);
+
 function parseMoney(s){
   s = String(s||"").replace(/[R$\s]/g,"");
   if(!s) return NaN;
@@ -893,7 +902,7 @@ function renderFormGasto(host,c,isNew,k,mes){
     ${isNew?`<div class="atalhos">${ATALHOS.map(([ic,n,cat])=>`<button type="button" data-at="${n}" data-cat="${temCat(cat)?cat:"Outros"}"><span aria-hidden="true">${ic}</span> ${n}</button>`).join("")}</div>`:""}
     <div class="field f-nome"><label class="label" for="fNome">O que foi?</label><input id="fNome" required maxlength="60" placeholder="Ex.: Abastecimento, Estacionamento, Mercado" value="${esc(c.nome)}"></div>
     <div class="field f-cat"><label class="label" for="fCat">Categoria</label><select id="fCat">${CATS.map(([n])=>`<option ${n===c.categoria?"selected":""}>${n}</option>`).join("")}${temCat("Outros")?"":`<option ${c.categoria==="Outros"?"selected":""}>Outros</option>`}</select></div>
-    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="decimal" placeholder="0,00" value="${isNew?"":fmtIn(valorNo(c,k))}"></div>
+    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="numeric" data-money placeholder="0,00" value="${isNew?"":fmtIn(valorNo(c,k))}"></div>
     <div class="field f-dia"><label class="label" for="fDia">Dia</label><input id="fDia" type="number" min="1" max="31" value="${esc(c.dia)}"></div>
     ${localHtml(c)}
     ${camposHtml(c)}
@@ -948,7 +957,7 @@ function renderFormNovo(host, sit, k){
     <div class="atalhos" id="fAtalhos">${ATALHOS.map(([ic,n,cat])=>`<button type="button" data-at="${n}" data-cat="${temCat(cat)?cat:"Outros"}"><span aria-hidden="true">${ic}</span> ${n}</button>`).join("")}</div>
     <div class="field f-nome"><label class="label" for="fNome">Descrição</label><input id="fNome" required maxlength="60" placeholder="Ex.: Padaria, Mercado, Luz, Aluguel"></div>
     <div class="field f-cat"><label class="label" for="fCat">Categoria</label><select id="fCat">${CATS.map(([n])=>`<option ${n===catPad(sit)?"selected":""}>${n}</option>`).join("")}${temCat("Outros")?"":"<option>Outros</option>"}</select></div>
-    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="decimal" placeholder="0,00"></div>
+    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="numeric" data-money placeholder="0,00"></div>
     <div class="field f-dia" id="fDataBox"><label class="label" for="fData">Vence em</label><input id="fData" type="date" value="${dataPadrao("avencer",k)}"></div>
     <div class="field f-tipo" id="fRepBox"><label class="label" for="fTipo">Repete?</label><select id="fTipo"><option value="mensal">Todo mês</option><option value="unica">Só desta vez</option></select></div>
     <div id="fLocalBox" style="grid-column:1/-1">${localHtml({})}</div>
@@ -1011,7 +1020,7 @@ function renderForm(){
     <h3>${isNew?"Nova conta":"Editar conta"}</h3>
     <div class="field f-nome"><label class="label" for="fNome">Nome</label><input id="fNome" required maxlength="60" placeholder="Ex.: Aluguel, Luz, Internet" value="${esc(c.nome)}"></div>
     <div class="field f-cat"><label class="label" for="fCat">Categoria</label><select id="fCat">${CATS.map(([n])=>`<option ${n===c.categoria?"selected":""}>${n}</option>`).join("")}</select></div>
-    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="decimal" placeholder="0,00" value="${isNew?"":fmtIn(valorNo(c,k))}"></div>
+    <div class="field f-valor"><label class="label" for="fValor">Valor (R$)</label><input id="fValor" inputmode="numeric" data-money placeholder="0,00" value="${isNew?"":fmtIn(valorNo(c,k))}"></div>
     <div class="field f-dia"><label class="label" for="fDia">Vence dia</label><input id="fDia" type="number" min="1" max="31" value="${esc(c.dia)}"></div>
     <div class="field f-tipo"><label class="label" for="fTipo">Repete?</label><select id="fTipo"><option value="mensal" ${c.tipo!=="unica"?"selected":""}>Todo mês</option><option value="unica" ${c.tipo==="unica"?"selected":""}>Só em ${mes}</option></select></div>
     ${!isNew && c.tipo!=="unica" ? `<div class="f-opts"><label><input type="checkbox" id="fSoMes"> Valor diferente só em ${mes} (ex.: conta de luz que varia)</label></div>`:""}
@@ -1394,7 +1403,7 @@ function renderFormE(){
     <div class="field f-cat"><label class="label" for="eFonte">Tipo de entrada</label><select id="eFonte"><option value="fixa" ${e.fonte!=="cnpj"?"selected":""}>Entrada fixa</option><option value="cnpj" ${e.fonte==="cnpj"?"selected":""}>Entrada CNPJ</option></select></div>
     <div class="field f-nome"><label class="label" for="eQuem">Quem recebeu</label><input id="eQuem" maxlength="60" placeholder="Ex.: Witter, Ana" value="${esc(e.quem||"")}"></div>
     <div class="field f-nome"><label class="label" for="eNome">Descrição (opcional)</label><input id="eNome" maxlength="60" placeholder="Ex.: Salário, Nota fiscal cliente X" value="${esc(e.nome||"")}"></div>
-    <div class="field f-valor"><label class="label" for="eValor">Valor (R$)</label><input id="eValor" inputmode="decimal" placeholder="0,00" value="${isNew?"":fmtIn(valorNo(e,k))}"></div>
+    <div class="field f-valor"><label class="label" for="eValor">Valor (R$)</label><input id="eValor" inputmode="numeric" data-money placeholder="0,00" value="${isNew?"":fmtIn(valorNo(e,k))}"></div>
     <div class="field f-dia"><label class="label" for="eDia">Dia da entrada</label><input id="eDia" type="number" min="1" max="31" value="${esc(e.dia)}"></div>
     <div class="field f-tipo"><label class="label" for="eTipo">Repete?</label><select id="eTipo"><option value="mensal" ${e.tipo!=="unica"?"selected":""}>Todo mês</option><option value="unica" ${e.tipo==="unica"?"selected":""}>Só em ${mes}</option></select></div>
     ${!isNew && e.tipo!=="unica" ? `<div class="f-opts"><label><input type="checkbox" id="eSoMes"> Valor diferente só em ${mes}</label></div>`:""}

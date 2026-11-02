@@ -202,8 +202,8 @@ summary:focus-visible{outline:3px solid #A7F3D0;outline-offset:-3px}
       <h2>Simulador: quanto o dinheiro pode crescer</h2>
       <p class="sub">Guardando todo mês, os juros trabalham por vocês.</p>
       <div class="campos c4">
-        <div class="campo"><label for="sAporte">Guardar por mês</label><input id="sAporte" inputmode="decimal" value="300"></div>
-        <div class="campo"><label for="sInicial">Já tenho guardado</label><input id="sInicial" inputmode="decimal" value="0"></div>
+        <div class="campo"><label for="sAporte">Guardar por mês</label><input id="sAporte" inputmode="numeric" data-money value="300,00"></div>
+        <div class="campo"><label for="sInicial">Já tenho guardado</label><input id="sInicial" inputmode="numeric" data-money value="0,00"></div>
         <div class="campo"><label for="sAnos">Anos</label><input id="sAnos" type="number" min="1" max="40" value="5"></div>
         <div class="campo"><label for="sTaxa">Rende ao ano (%)</label><input id="sTaxa" inputmode="decimal" value="10"></div>
       </div>
@@ -220,9 +220,9 @@ summary:focus-visible{outline:3px solid #A7F3D0;outline-offset:-3px}
         <div class="campos c4 c5">
           <div class="campo"><label for="mTipo">Tipo</label><select id="mTipo"><option value="objetivo">Objetivo</option><option value="reserva">Reserva de emergência</option><option value="divida">Quitar dívida</option><option value="aposentadoria">Aposentadoria</option></select></div>
           <div class="campo"><label for="mNome">Nome da meta</label><input id="mNome" maxlength="60" placeholder="Ex.: Viagem, Carro, Reforma"></div>
-          <div class="campo"><label for="mAlvo">Valor total</label><input id="mAlvo" inputmode="decimal" placeholder="0,00"></div>
+          <div class="campo"><label for="mAlvo">Valor total</label><input id="mAlvo" inputmode="numeric" data-money placeholder="0,00"></div>
           <div class="campo"><label for="mPrazo">Até quando</label><input id="mPrazo" type="month"></div>
-          <div class="campo"><label for="mGuardado">Já guardado</label><input id="mGuardado" inputmode="decimal" placeholder="0,00"></div>
+          <div class="campo"><label for="mGuardado">Já guardado</label><input id="mGuardado" inputmode="numeric" data-money placeholder="0,00"></div>
         </div>
         <p class="err" id="mErr" hidden></p>
         <div class="acoes"><button class="btn" type="submit">+ Criar meta</button></div>
@@ -260,6 +260,15 @@ const HOJE_YM=ym(now.getFullYear(),now.getMonth());
 const atrasada=(c,k)=>c.natureza!=="gasto" && !(c.pagos&&c.pagos[k]) && ((c.nao_pagas&&c.nao_pagas[k]) || k<HOJE_YM || (k===HOJE_YM && Math.min(+c.dia||1,new Date(+k.slice(0,4),+k.slice(5),0).getDate())<now.getDate()));
 const recebida=(e,k)=>k<HOJE_YM?true:k>HOJE_YM?false:Math.min(+e.dia||1,new Date(+k.slice(0,4),+k.slice(5),0).getDate())<=now.getDate();
 const valorNo=(c,k)=>c.valores&&c.valores[k]!=null?Number(c.valores[k]):Number(c.valor||0);
+
+/* ---------- máscara de dinheiro: digita só números, o app põe pontos e vírgula ---------- */
+function mascaraDinheiro(el){
+  const d=String(el.value).replace(/\D/g,"").replace(/^0+/,"").slice(0,11);
+  el.value = d ? (parseInt(d,10)/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) : "";
+  try{ el.setSelectionRange(el.value.length,el.value.length); }catch(e){}
+}
+document.addEventListener("input",e=>{ const t=e.target; if(t && t.matches && t.matches("input[data-money]")) mascaraDinheiro(t); },true);
+
 function parseMoney(s){ s=String(s||"").replace(/[R$\s]/g,""); if(!s) return NaN;
   if(s.includes(",")) s=s.replace(/\./g,"").replace(",","."); else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,""); return Number(s); }
 const NS="http://www.w3.org/2000/svg";
@@ -371,7 +380,7 @@ function desenharMetas(){
       <div class="meta-val">${fmt0(g)}<small>de ${fmt0(alvo)}</small></div></div>
       <div class="prog"><i style="width:${pct}%;${m.tipo==="divida"?"background:#D97706":""}"></i></div>
       <p class="meta-info" style="margin:0">${info}</p>
-      <div class="meta-acoes"><input inputmode="decimal" placeholder="R$ 0,00" aria-label="Valor guardado agora em ${esc(m.nome)}" data-v><button class="btn sm" type="button" data-add>${m.tipo==="divida"?"Paguei":"Guardei"}</button><span style="flex:1"></span><button class="btn sm danger" type="button" data-del>Excluir</button></div></li>`;
+      <div class="meta-acoes"><input inputmode="numeric" data-money placeholder="R$ 0,00" aria-label="Valor guardado agora em ${esc(m.nome)}" data-v><button class="btn sm" type="button" data-add>${m.tipo==="divida"?"Paguei":"Guardei"}</button><span style="flex:1"></span><button class="btn sm danger" type="button" data-del>Excluir</button></div></li>`;
   }).join("");
 }
 $("metas").addEventListener("click",async e=>{
@@ -380,7 +389,7 @@ $("metas").addEventListener("click",async e=>{
     const {error}=await sb.from("metas").update({guardado:Number(m.guardado)+v,atualizado_em:new Date().toISOString()}).eq("id",m.id); if(error) return alert("Não consegui salvar."); await carregarMetas(); }
   if(e.target.closest("[data-del]")){ if(!confirm(`Excluir a meta “${m.nome}”?`)) return; await sb.from("metas").delete().eq("id",m.id); await carregarMetas(); }
 });
-$("mTipo").onchange=()=>{ const t=$("mTipo").value; if(t==="reserva"&&M){ $("mNome").value="Reserva de emergência"; $("mAlvo").value=String(M.reservaAlvo).replace(".",","); } if(t==="aposentadoria"&&!$("mNome").value) $("mNome").value="Aposentadoria"; };
+$("mTipo").onchange=()=>{ const t=$("mTipo").value; if(t==="reserva"&&M){ $("mNome").value="Reserva de emergência"; $("mAlvo").value=Number(M.reservaAlvo).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); } if(t==="aposentadoria"&&!$("mNome").value) $("mNome").value="Aposentadoria"; };
 $("mForm").onsubmit=async e=>{
   e.preventDefault(); const err=$("mErr"); err.hidden=true; const fail=t=>{ err.textContent=t; err.hidden=false; };
   const nome=$("mNome").value.trim(), alvo=parseMoney($("mAlvo").value), g=$("mGuardado").value.trim()?parseMoney($("mGuardado").value):0, prazo=$("mPrazo").value||null;
@@ -495,7 +504,7 @@ function aviso(t){ $("load").hidden=true; $("aviso").hidden=false; if(t) $("avis
   contas=c.data||[]; entradas=e.data||[]; metas=mt.data||[];
   if(cs.data&&cs.data.nome) $("casaNome").textContent=cs.data.nome;
   M=calcular();
-  if(M&&M.sobra>0) $("sAporte").value=String(Math.max(50,Math.round(M.sobra*0.3/10)*10));
+  if(M&&M.sobra>0) $("sAporte").value=Math.max(50,Math.round(M.sobra*0.3/10)*10).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
   $("load").hidden=true; $("app").hidden=false; desenharTudo();
 })();
 
