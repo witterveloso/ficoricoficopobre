@@ -1368,13 +1368,13 @@ function renderEntradas(k, ents, eFixa, eCnpj, total, ar){
   const sc=$("saldoCard"); sc.className="saldo "+(nivel||"none");
   $("sdVal").textContent = (sobra<0?"- ":"")+fmt(Math.abs(sobra));
   $("sdSub").textContent = nivel ? `Já entrou ${fmt(ent)} · Saídas ${fmt(total)}${ar&&ar.v>0?` · ainda entram ${fmt(ar.v)} (com elas: ${sobra+ar.v<0?"- ":""}${fmt(Math.abs(sobra+ar.v))})`:""}` : "Cadastre entradas e contas";
-  $("sdMsg").textContent = {red:"Fico pobre! 💸 Saiu mais do que entrou.",yellow:`Fica esperto! Só sobram ${pctSobra}% da renda.`,green:`Fico rico! 👑 Ainda sobram ${pctSobra}% da renda.`}[nivel]||"";
+  $("sdMsg").textContent = {red:"Tá pobre! 💸 Saiu mais dinheiro do que entrou.",yellow:`Fica esperto! Só sobram ${pctSobra}% da sua renda.`,green:`Tá rico! 👑 Ainda sobram ${pctSobra}% da sua renda.`}[nivel]||"";
   $("sdMsg").hidden = !nivel;
   $("sdPig").src = (nivel==="red"||nivel==="yellow") ? AV_POBRE : AV_RICO;
   $("sdTips").innerHTML = nivel==="yellow" ? "<li>Segure os gastos do dia a dia até a próxima entrada</li><li>Veja se dá para adiar alguma compra</li><li>Contas atrasadas não entram no saldo: são só lembretes</li>" : "<li>Revise seus gastos</li><li>Veja as contas em atraso</li><li>Ajuste o que dá para cortar este mês</li>";
   $("sdTips").hidden = nivel!=="red" && nivel!=="yellow";
-  $("saud").textContent = {red:"Fico pobre… bora virar esse jogo?",yellow:"Atenção: a renda está acabando",green:"Fico rico! Disciplina hoje, liberdade amanhã."}[nivel]||"Olá! Qual lado hoje?";
-  $("semTxt").textContent = ({red:"Fico pobre",yellow:"Atenção: até 20% da renda",green:"Fico rico"}[nivel]||"Sem lançamentos");
+  $("saud").textContent = {red:"Gastou mais do que entrou. Bora ajustar?",yellow:"Atenção: a renda do mês está acabando.",green:"Está sobrando dinheiro. Continue assim!"}[nivel]||"Olá! Qual lado hoje?";
+  $("semTxt").textContent = ({red:"Tá pobre",yellow:"Atenção",green:"Tá rico"}[nivel]||"Sem lançamentos");
   $("semVal").textContent = nivel ? `Entradas ${fmt(ent)} · Saídas ${fmt(total)}` : "Cadastre entradas e contas";
   sem.title = "Vermelho: contas maiores que as entradas. Amarelo: sobra menor que 15% das entradas. Verde: sobra confortável.";
   const usa = ent ? Math.round(total/ent*100) : (total?100:0);
