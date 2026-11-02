@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dicas e planos · Fico Rico Fico Pobre</title>
+<meta name="theme-color" content="#12B76A">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{color-scheme:light;
+  --bg:#FFF9F1;--surface:#FFFFFF;--sunk:#F6F1E8;--line:#E5E7EB;--grid:#EFEBE4;
+  --ink:#1F2937;--muted:#6B7280;--faint:#9CA3AF;
+  --rico:#12B76A;--rico-d:#0F7A43;--pobre:#E53935;--mark:#FFC533;
+  --s-ent:#0F7A43;--s-sai:#D97706;--s-conta:#2A78D6;--s-gasto:#D97706;--s-cat:#2A78D6;
+  --pos:#0F7A43;--neg:#D6336C;
+  --f-display:"Baloo 2",system-ui,sans-serif;--f-body:Inter,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.voltar{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--rico-d);font-weight:700;font-size:15px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px}
+.voltar:hover{border-color:var(--rico)}
+h1{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.1;margin:0}
+h1 small{display:block;font-family:var(--f-body);font-weight:500;font-size:14px;color:var(--muted);margin-top:2px}
+.ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.mes{display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.mes button{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:18px;color:var(--ink)}
+.mes button:hover{background:var(--sunk)} .mes button:focus-visible{outline:3px solid var(--rico);outline-offset:1px}
+.mes b{font-family:var(--f-display);font-size:18px;min-width:150px;text-align:center}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+.seg button{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:3px solid var(--rico);outline-offset:1px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.card{grid-column:span 12;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:800;font-size:19px;margin:0}
+.card .sub{margin:2px 0 12px;color:var(--muted);font-size:13.5px}
+.tiles{grid-column:span 12;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;min-width:0}
+.tile span{display:block;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tile b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(22px,5.4vw,30px);line-height:1.15;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.tile small .up{color:var(--pobre);font-weight:700} .tile small .down{color:var(--rico-d);font-weight:700}
+.tile.dest{background:var(--rico-d);border-color:var(--rico-d);color:#fff} .tile.dest span,.tile.dest small{color:#D1FAE5}
+.tile.dest.neg{background:var(--pobre);border-color:var(--pobre)} .tile.dest.neg span,.tile.dest.neg small{color:#FFE4E4}
+@media (min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:1000px){.c-7{grid-column:span 7}.c-5{grid-column:span 5}.c-6{grid-column:span 6}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:-4px 0 8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.legend i.ln{height:3px;border-radius:2px;vertical-align:3px;width:16px}
+.legend i.dash{height:0;border-top:2px dashed currentColor;width:16px;vertical-align:3px;border-radius:0}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--f-body);font-size:11.5px;fill:var(--muted)}
+.chart .lab{fill:var(--ink);font-weight:600;font-size:12px}
+.chart .val{fill:var(--ink);font-weight:700;font-size:12px}
+.vazio{color:var(--muted);font-size:14px;padding:18px 0}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:240px;opacity:0;transition:opacity .12s}
+.tip b{font-family:var(--f-display);font-size:14px} .tip .r{display:flex;align-items:center;gap:6px} .tip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tip.on{opacity:1}
+.tbl-btn{all:unset;cursor:pointer;color:var(--rico-d);font-weight:600;font-size:13px;text-decoration:underline;margin-top:8px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left} td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.top{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.top li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.top .pos{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--faint);text-align:center}
+.top .nm{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .mt{display:block;margin-top:2px;font-size:12.5px;color:var(--muted)}
+.top .vl{font-family:var(--f-display);font-weight:800;font-size:16px;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:4px;vertical-align:1px}
+.tag.g{background:#FFF4DB;color:#92400E} .tag.c{background:#E3EEFB;color:#1E4E8C}
+.aviso{max-width:460px;margin:12vh auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}
+.aviso a{display:inline-block;margin-top:12px;background:var(--rico);color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:12px 18px;box-shadow:0 4px 0 var(--rico-d)}
+.load{color:var(--muted);text-align:center;padding:40px 0}
+</style>
+</head>
+<body>
+<style>
+/* ===== dicas ===== */
+.passos{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.passo{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;align-items:start;border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--surface)}
+.passo .n{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:18px;background:var(--sunk);color:var(--muted)}
+.passo b{font-family:var(--f-display);font-size:16.5px;display:block;line-height:1.25}
+.passo p{margin:3px 0 0;font-size:13.5px;color:var(--muted);line-height:1.5}
+.passo.feito .n{background:#D1FAE5;color:var(--rico-d)}
+.passo.agora{border:2px solid var(--rico);box-shadow:0 6px 18px rgba(18,183,106,.12)}
+.passo.agora .n{background:var(--rico);color:#fff}
+.selo{display:inline-block;font-family:var(--f-body);font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.selo.ok{background:#D1FAE5;color:var(--rico-d)} .selo.ag{background:var(--rico);color:#fff}
+.diag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media(min-width:760px){.diag{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.diag div{background:var(--sunk);border-radius:14px;padding:10px 12px}
+.diag span{display:block;font-size:12px;font-weight:600;color:var(--muted)}
+.diag b{display:block;font-family:var(--f-display);font-size:20px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.regra{display:flex;flex-direction:column;gap:12px}
+.rg-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center}
+.rg-row .nm{font-weight:700;font-size:14px} .rg-row .nm small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.rg-bars{display:flex;flex-direction:column;gap:4px}
+.rg-bar{position:relative;height:14px;background:var(--sunk);border-radius:4px}
+.rg-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}
+.rg-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px}
+.rg-txt{font-size:12.5px;color:var(--muted)} .rg-txt b{color:var(--ink)}
+.box-dica{border-radius:14px;padding:12px 14px;background:#FFF4DB;font-size:14px;line-height:1.5}
+.box-dica.ok{background:#D1FAE5} .box-dica.bad{background:#FFE4E8}
+.campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:760px){.campos.c4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.campo{display:flex;flex-direction:column;gap:4px;min-width:0}
+.campo label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.campo input,.campo select{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;color:var(--ink);min-width:0;width:100%}
+.campo input:focus,.campo select:focus{outline:3px solid #A7F3D0;border-color:var(--rico)}
+.campo.full{grid-column:1/-1}
+@media(min-width:1000px){.campos.c5{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.campo label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--rico);color:#fff;font-weight:700;border-radius:14px;padding:11px 18px;box-shadow:0 4px 0 var(--rico-d);font-size:15px}
+.btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--rico-d)}
+.btn:focus-visible{outline:3px solid #A7F3D0;outline-offset:2px}
+.btn.ghost{background:#fff;color:var(--rico-d);border:2px solid var(--rico);box-shadow:none;padding:9px 16px}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:10px}
+.btn.danger{background:#fff;color:var(--pobre);border:2px solid #FECACA;box-shadow:none}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.metas{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.meta{border:1px solid var(--line);border-radius:16px;padding:14px}
+.meta-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.meta-top b{font-family:var(--f-display);font-size:17px;display:block}
+.meta-top small{color:var(--muted);font-size:12.5px}
+.meta-val{font-family:var(--f-display);font-weight:800;font-size:16px;white-space:nowrap;text-align:right}
+.meta-val small{display:block;font-family:var(--f-body);font-weight:500;color:var(--muted);font-size:12px}
+.prog{height:12px;background:var(--sunk);border-radius:999px;margin:10px 0 6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--rico);border-radius:999px}
+.meta-info{font-size:13.5px;color:var(--ink)} .meta-info .mut{color:var(--muted)}
+.meta-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.meta-acoes input{font:inherit;font-size:15px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;width:120px}
+.tipo-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--sunk);color:var(--muted);margin-left:6px;vertical-align:2px}
+.sim-res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 6px}
+.sim-res div{background:var(--sunk);border-radius:14px;padding:10px 12px;min-width:0}
+.sim-res span{display:block;font-size:12px;font-weight:600;color:var(--muted)}
+.sim-res b{display:block;font-family:var(--f-display);font-size:clamp(16px,4.2vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){.sim-res{grid-template-columns:1fr}.sim-res div{display:flex;justify-content:space-between;align-items:baseline;gap:10px}}
+.sim-res .dest{background:var(--rico-d);color:#fff} .sim-res .dest span{color:#D1FAE5}
+.aprenda{display:flex;flex-direction:column;gap:10px}
+details{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;font-family:var(--f-display);font-weight:800;font-size:18px}
+summary::-webkit-details-marker{display:none}
+summary .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--sunk);flex:none}
+summary small{display:block;font-family:var(--f-body);font-weight:500;font-size:13px;color:var(--muted)}
+summary::after{content:"+";margin-left:auto;font-size:22px;color:var(--muted)}
+details[open] summary::after{content:"−"}
+summary:focus-visible{outline:3px solid #A7F3D0;outline-offset:-3px}
+.dicas{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.dica{border-left:3px solid var(--rico);padding:2px 0 2px 12px}
+.dica b{display:block;font-size:15px} .dica p{margin:3px 0 0;font-size:14px;color:var(--muted);line-height:1.55}
+.dica.sua{border-left-color:#D97706} .dica.sua b::before{content:"Para vocês · ";color:#B45309;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.inv{display:grid;gap:8px}
+.inv div{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.inv b{font-size:14.5px} .inv p{margin:3px 0 0;font-size:13.5px;color:var(--muted);line-height:1.5}
+.inv .risco{font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px}
+.r1{background:#D1FAE5;color:var(--rico-d)} .r2{background:#FFF4DB;color:#92400E} .r3{background:#FFE4E8;color:#9F1239}
+.nota-legal{font-size:12.5px;color:var(--muted);line-height:1.5;margin:18px 0 0}
+.err{color:var(--pobre);font-size:13.5px;margin:6px 0 0}
+</style>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <h1>Dicas e planos<small id="casaNome">Fico Rico Fico Pobre</small></h1>
+    <a class="voltar" href="./">← Voltar ao app</a>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Como está o dinheiro de vocês</h2>
+      <p class="sub" id="diagSub">Média dos últimos meses com lançamentos</p>
+      <div class="diag" id="diag"></div>
+      <div class="box-dica" id="diagMsg"></div>
+    </section>
+
+    <section class="card c-6">
+      <h2>O caminho, passo a passo</h2>
+      <p class="sub">A ordem que mais protege a casa. O passo em destaque é onde vocês estão agora.</p>
+      <ol class="passos" id="passos"></ol>
+    </section>
+
+    <section class="card c-6">
+      <h2>Regra 50 · 30 · 20</h2>
+      <p class="sub">Um jeito simples de dividir o que entra. A barra mostra vocês; o risco preto é o ideal.</p>
+      <div class="regra" id="regra"></div>
+      <p class="nota-legal" style="margin-top:12px">Aqui “essencial” são as contas do mês e “estilo de vida” são os gastos do dia a dia. Mercado e combustível podem ser essenciais também, então use como guia, não como regra rígida.</p>
+    </section>
+
+    <section class="card c-6">
+      <h2>Reserva de emergência</h2>
+      <p class="sub">Dinheiro guardado para imprevisto: desemprego, conserto, saúde. É o primeiro investimento de qualquer casa.</p>
+      <div id="reserva"></div>
+    </section>
+
+    <section class="card c-6">
+      <h2>Simulador: quanto o dinheiro pode crescer</h2>
+      <p class="sub">Guardando todo mês, os juros trabalham por vocês.</p>
+      <div class="campos c4">
+        <div class="campo"><label for="sAporte">Guardar por mês</label><input id="sAporte" inputmode="decimal" value="300"></div>
+        <div class="campo"><label for="sInicial">Já tenho guardado</label><input id="sInicial" inputmode="decimal" value="0"></div>
+        <div class="campo"><label for="sAnos">Anos</label><input id="sAnos" type="number" min="1" max="40" value="5"></div>
+        <div class="campo"><label for="sTaxa">Rende ao ano (%)</label><input id="sTaxa" inputmode="decimal" value="10"></div>
+      </div>
+      <div class="sim-res" id="simRes"></div>
+      <div class="legend"><span><i class="ln" style="background:var(--rico-d)"></i>Com juros</span><span style="color:var(--muted)"><i class="dash"></i>Só guardando</span></div>
+      <div class="chart" id="chSim"></div>
+      <p class="nota-legal">Estimativa com rendimento fixo. Em 2026 a Selic ficou na casa dos 14% ao ano, mas descontando imposto e inflação o ganho real é bem menor. Por isso o padrão aqui é 10%; ajuste como quiser.</p>
+    </section>
+
+    <section class="card">
+      <h2>Metas e planos para o futuro</h2>
+      <p class="sub">Dê nome e prazo para os sonhos. O app calcula quanto guardar por mês.</p>
+      <form id="mForm" novalidate>
+        <div class="campos c4 c5">
+          <div class="campo"><label for="mTipo">Tipo</label><select id="mTipo"><option value="objetivo">Objetivo</option><option value="reserva">Reserva de emergência</option><option value="divida">Quitar dívida</option><option value="aposentadoria">Aposentadoria</option></select></div>
+          <div class="campo"><label for="mNome">Nome da meta</label><input id="mNome" maxlength="60" placeholder="Ex.: Viagem, Carro, Reforma"></div>
+          <div class="campo"><label for="mAlvo">Valor total</label><input id="mAlvo" inputmode="decimal" placeholder="0,00"></div>
+          <div class="campo"><label for="mPrazo">Até quando</label><input id="mPrazo" type="month"></div>
+          <div class="campo"><label for="mGuardado">Já guardado</label><input id="mGuardado" inputmode="decimal" placeholder="0,00"></div>
+        </div>
+        <p class="err" id="mErr" hidden></p>
+        <div class="acoes"><button class="btn" type="submit">+ Criar meta</button></div>
+      </form>
+      <ul class="metas" id="metas"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Aprenda</h2>
+      <p class="sub">Dicas práticas, algumas feitas a partir dos gastos de vocês.</p>
+      <div class="aprenda" id="aprenda"></div>
+      <p class="nota-legal">Conteúdo educativo. Não é recomendação de investimento. Antes de decisões grandes, compare opções e, se puder, converse com um planejador financeiro certificado (CFP).</p>
+    </section>
+  </div>
+</div>
+<div class="aviso" id="aviso" hidden><h1 style="font-size:24px">Entre no app primeiro</h1><p id="avisoTx" style="color:var(--muted)">Para ver as dicas, faça login no Fico Rico Fico Pobre neste navegador.</p><a href="./">Abrir o app</a></div>
+<p class="load" id="load">Carregando…</p>
+<div class="tip" id="tip"></div>
+
+<script>
+const SB_URL="https://zwlvqrypqajfmzjzbfdj.supabase.co", SB_KEY="sb_publishable_2wvPPLx1Ls8LOzoTtb6Nvg_8w8JESoe";
+const sb = window.supabase ? window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"contas-da-casa-auth"}}) : null;
+const $=id=>document.getElementById(id);
+const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const fmt0=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const fmtK=v=>{ const a=Math.abs(v), s=v<0?"-":""; return a>=1e6? s+"R$ "+(a/1e6).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi" : a>=1000? s+"R$ "+(a/1000).toLocaleString("pt-BR",{maximumFractionDigits:a>=10000?0:1})+" mil" : s+"R$ "+Math.round(a); };
+const now=new Date(); const ym=(y,m)=>`${y}-${String(m+1).padStart(2,"0")}`; const HOJE=ym(now.getFullYear(),now.getMonth());
+const addYM=(k,n)=>{ let y=+k.slice(0,4), m=+k.slice(5)-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; return ym(y,m); };
+const difMeses=(a,b)=>(+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5)-+a.slice(5));
+const nomeMes=k=>MESES[+k.slice(5)-1]+" de "+k.slice(0,4);
+const visivel=(c,k)=>c.tipo==="unica"?c.mes===k:(!c.inicio||c.inicio<=k)&&(!c.fim||k<=c.fim);
+const HOJE_YM=ym(now.getFullYear(),now.getMonth());
+const atrasada=(c,k)=>c.natureza!=="gasto" && !(c.pagos&&c.pagos[k]) && ((c.nao_pagas&&c.nao_pagas[k]) || k<HOJE_YM || (k===HOJE_YM && Math.min(+c.dia||1,new Date(+k.slice(0,4),+k.slice(5),0).getDate())<now.getDate()));
+const recebida=(e,k)=>k<HOJE_YM?true:k>HOJE_YM?false:Math.min(+e.dia||1,new Date(+k.slice(0,4),+k.slice(5),0).getDate())<=now.getDate();
+const valorNo=(c,k)=>c.valores&&c.valores[k]!=null?Number(c.valores[k]):Number(c.valor||0);
+function parseMoney(s){ s=String(s||"").replace(/[R$\s]/g,""); if(!s) return NaN;
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",","."); else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,""); return Number(s); }
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){ const e=document.createElementNS(NS,tag); for(const a in attrs) e.setAttribute(a,attrs[a]); if(parent) parent.appendChild(e); return e; }
+function txt(parent,x,y,t,attrs={}){ const e=el("text",Object.assign({x,y},attrs),parent); e.textContent=t; return e; }
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tip=$("tip");
+function mostrarTip(html,x,y){ tip.innerHTML=html; tip.classList.add("on"); const r=tip.getBoundingClientRect(); let L=x+14, T=y-r.height-12; if(L+r.width>innerWidth-8) L=x-r.width-14; if(L<8) L=8; if(T<8) T=y+16; tip.style.left=L+"px"; tip.style.top=T+"px"; }
+function esconderTip(){ tip.classList.remove("on"); }
+document.addEventListener("scroll",esconderTip,{passive:true});
+
+let contas=[], entradas=[], metas=[], M=null;
+
+/* ---------- diagnóstico ---------- */
+function dadosMes(m){
+  const C=contas.filter(c=>visivel(c,m) && !atrasada(c,m)), Etodas=entradas.filter(e=>visivel(e,m)), E=Etodas.filter(e=>recebida(e,m)), aReceber=Etodas.filter(e=>!recebida(e,m)).reduce((s,e)=>s+valorNo(e,m),0);
+  const ent=E.reduce((s,e)=>s+valorNo(e,m),0);
+  const gastos=C.filter(c=>c.natureza==="gasto").reduce((s,c)=>s+valorNo(c,m),0);
+  const fixas=C.filter(c=>c.natureza!=="gasto").reduce((s,c)=>s+valorNo(c,m),0);
+  return {m,C,E,Etodas,aReceber,ent,gastos,fixas,sai:gastos+fixas,sobra:ent-gastos-fixas};
+}
+function calcular(){
+  const meses=[]; for(let i=1;i<13 && meses.length<3;i++){ const d=dadosMes(addYM(HOJE,-i)); if(d.C.length||d.Etodas.length) meses.push(d); }
+  if(!meses.length){ const d=dadosMes(HOJE); if(d.C.length||d.Etodas.length) meses.push(d); }
+  if(!meses.length) return null;
+  const media=f=>meses.reduce((s,d)=>s+d[f],0)/meses.length;
+  const r={meses,ent:media("ent"),sai:media("sai"),fixas:media("fixas"),gastos:media("gastos")}; r.sobra=r.ent-r.sai;
+  const DIV=/limpar nome|d[ií]vida|empr[eé]stimo|financiamento|acordo|renegocia|consignado|cheque especial|rotativo/i;
+  r.dividas=[]; const vistos=new Set();
+  meses.forEach(d=>d.C.forEach(c=>{ if((DIV.test(c.nome||"")||DIV.test(c.categoria||"")||/#juros/.test(c.obs||"")) && !vistos.has(c.id)){ vistos.add(c.id); r.dividas.push(c); } }));
+  r.metaDivida=metas.filter(m=>m.tipo==="divida"&&Number(m.guardado)<Number(m.alvo));
+  r.temDivida=r.dividas.length>0||r.metaDivida.length>0;
+  r.reservaAlvo=Math.max(100,Math.ceil(r.sai*6/100)*100);
+  r.reserva=metas.find(m=>m.tipo==="reserva")||null;
+  r.porCat={}; meses.forEach(d=>d.C.forEach(c=>{ const n=c.categoria||"Outros"; r.porCat[n]=(r.porCat[n]||0)+valorNo(c,d.m)/meses.length; }));
+  return r;
+}
+
+function desenharDiag(){
+  if(!M){ $("diag").innerHTML=""; $("diagSub").textContent="Ainda sem lançamentos";
+    $("diagMsg").innerHTML="Cadastre as entradas e as contas no app para receber dicas feitas para vocês. As dicas gerais abaixo já valem desde já."; return; }
+  const n=M.meses.length; $("diagSub").textContent = M.meses[0].m===HOJE ? "Este mês até agora (as entradas só contam depois que caem)" : `Média ${n===1?"do último mês fechado":`dos últimos ${n} meses fechados`} com lançamentos`;
+  const pct=M.ent>0?Math.round(M.sai/M.ent*100):null;
+  $("diag").innerHTML=`<div><span>Entra por mês</span><b>${fmt0(M.ent)}</b></div><div><span>Sai por mês</span><b>${fmt0(M.sai)}</b></div>
+    <div><span>${M.sobra<0?"Falta por mês":"Sobra por mês"}</span><b style="color:${M.sobra<0?"var(--pobre)":"var(--rico-d)"}">${fmt0(Math.abs(M.sobra))}</b></div>
+    <div><span>Comprometido</span><b>${pct==null?"—":pct+"%"}</b></div>`;
+  const box=$("diagMsg");
+  if(M.ent<=0){ box.className="box-dica"; box.innerHTML="Ainda não há entradas cadastradas. Lance a entrada fixa e as do CNPJ para o diagnóstico ficar certo."; }
+  else if(M.sobra<0){ box.className="box-dica bad"; box.innerHTML=`<b>Prioridade agora: parar de ficar no vermelho.</b> Em média faltam ${fmt0(-M.sobra)} por mês. Antes de pensar em investir, corte o que não é essencial e veja o que dá para renegociar. Comece pelos maiores gastos do dia a dia, que são os mais fáceis de mexer.`; }
+  else if(pct>85){ box.className="box-dica"; box.innerHTML=`<b>Está no azul, mas apertado.</b> ${pct}% do que entra já está comprometido. Qualquer imprevisto vira dívida. O primeiro objetivo é abrir uma folga de pelo menos 15% e começar a reserva de emergência.`; }
+  else { box.className="box-dica ok"; box.innerHTML=`<b>Boa! Sobra dinheiro todo mês.</b> Sobram em média ${fmt0(M.sobra)}. O segredo agora é dar destino a essa sobra assim que o dinheiro entra: primeiro a reserva, depois as metas.`; }
+}
+
+/* ---------- passos ---------- */
+function desenharPassos(){
+  const temDados=!!M&&M.ent>0;
+  const reservaOk=M&&M.reserva&&Number(M.reserva.guardado)>=Number(M.reserva.alvo);
+  const P=[
+    ["Sair do vermelho","Gastar menos do que entra todo mês. Sem isso, nenhum outro passo se sustenta.", temDados && M.sobra>=0],
+    ["Quitar dívidas caras","Cartão rotativo, cheque especial e empréstimo pessoal cobram juros altíssimos. Quitar ou renegociar rende mais que qualquer investimento.", temDados && !M.temDivida],
+    ["Montar a reserva de emergência","De 3 a 6 meses das saídas guardados num lugar seguro e que dá para sacar a qualquer hora.", !!reservaOk],
+    ["Investir para os objetivos","Viagem, carro, reforma: cada sonho com valor, prazo e um valor fixo guardado todo mês.", metas.some(m=>m.tipo==="objetivo")],
+    ["Pensar no longo prazo","Aposentadoria e independência financeira. Quanto antes começar, menos precisa guardar por mês.", metas.some(m=>m.tipo==="aposentadoria")]
+  ];
+  const agora=P.findIndex(p=>!p[2]);
+  $("passos").innerHTML=P.map(([t,d,ok],i)=>`<li class="passo ${ok?"feito":""} ${i===agora?"agora":""}"><span class="n">${ok?"✓":i+1}</span><div><b>${t}${ok?'<span class="selo ok">feito</span>':i===agora?'<span class="selo ag">vocês estão aqui</span>':""}</b><p>${d}</p></div></li>`).join("");
+}
+
+/* ---------- 50/30/20 ---------- */
+function desenharRegra(){
+  if(!M||M.ent<=0){ $("regra").innerHTML='<p class="vazio" style="padding:0">Cadastre as entradas para comparar com a regra.</p>'; return; }
+  const linhas=[["Essencial","contas do mês",M.fixas,50,"max",cssv("--s-conta")],["Estilo de vida","gastos do dia a dia",M.gastos,30,"max",cssv("--s-gasto")],["Futuro","o que sobra para guardar",Math.max(0,M.sobra),20,"min",cssv("--rico-d")]];
+  $("regra").innerHTML=linhas.map(([n,s,v,ideal,modo,cor])=>{ const p=Math.round(v/M.ent*100); const bom=modo==="max"?p<=ideal:p>=ideal;
+    return `<div class="rg-row"><span class="nm">${n}<small>${s}</small></span><div class="rg-bars"><div class="rg-bar"><i style="width:${Math.min(100,p)}%;background:${cor}"></i><em style="left:${ideal}%"></em></div>
+    <span class="rg-txt"><b>${p}%</b> (${fmt0(v)}) · ideal ${modo==="max"?"até":"pelo menos"} ${ideal}% (${fmt0(M.ent*ideal/100)}) ${bom?"✅":"⚠️"}</span></div></div>`; }).join("");
+}
+
+/* ---------- reserva ---------- */
+function desenharReserva(){
+  const box=$("reserva");
+  if(!M||M.sai<=0){ box.innerHTML='<p class="box-dica">O ideal é guardar de 3 a 6 meses do que a casa gasta. Assim que houver lançamentos, o app calcula o valor de vocês.</p>'; return; }
+  const alvo=M.reservaAlvo, min=Math.ceil(M.sai*3/100)*100, R=M.reserva;
+  const guard=R?Number(R.guardado):0, falta=Math.max(0,(R?Number(R.alvo):alvo)-guard);
+  const porMes=M.sobra>0?Math.max(50,Math.round(M.sobra*0.5/10)*10):0, meses=porMes?Math.ceil(falta/porMes):null;
+  box.innerHTML=`<div class="diag" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div><span>Mínimo (3 meses)</span><b>${fmt0(min)}</b></div><div><span>Ideal (6 meses)</span><b>${fmt0(alvo)}</b></div></div>
+    ${R?`<div class="prog"><i style="width:${Math.min(100,guard/Number(R.alvo)*100)}%"></i></div><p class="meta-info">Guardado <b>${fmt0(guard)}</b> de ${fmt0(R.alvo)} <span class="mut">· faltam ${fmt0(falta)}</span></p>`:""}
+    <p class="box-dica ${M.sobra>0?"ok":""}" style="margin-top:10px">${M.sobra<=0?"Primeiro é preciso sobrar dinheiro no mês. Quando sobrar, comece com qualquer valor, mesmo R$ 50: o hábito importa mais que o tamanho.":
+      falta<=0?"🎉 Reserva completa! Agora o dinheiro que sobra pode ir para as metas e investimentos de longo prazo.":
+      `Guardando <b>${fmt0(porMes)} por mês</b> (metade da sobra média), vocês completam a reserva em <b>${meses} ${meses===1?"mês":"meses"}</b>.`}</p>
+    <p class="meta-info mut" style="margin:10px 0 0;font-size:13.5px;color:var(--muted)">Onde guardar: Tesouro Selic ou CDB com liquidez diária que pague pelo menos 100% do CDI, em instituição sólida. Nada de deixar parado na conta corrente nem em investimento que não dá para sacar rápido.</p>
+    ${R?"":`<div class="acoes"><button class="btn" type="button" id="criarReserva">Criar meta de reserva de ${fmt0(alvo)}</button></div>`}`;
+  const b=$("criarReserva"); if(b) b.onclick=async()=>{ b.disabled=true; const prazo=meses?addYM(HOJE,meses):addYM(HOJE,12);
+    const {error}=await sb.from("metas").insert({nome:"Reserva de emergência",tipo:"reserva",alvo,guardado:0,prazo});
+    if(error){ console.error(error); b.disabled=false; return alert("Não consegui criar a meta. Tente de novo."); } await carregarMetas(); };
+}
+
+/* ---------- metas ---------- */
+const TIPOS={objetivo:"Objetivo",reserva:"Reserva",divida:"Dívida",aposentadoria:"Aposentadoria"};
+function desenharMetas(){
+  const ul=$("metas");
+  if(!metas.length){ ul.innerHTML='<li class="vazio" style="padding:4px 0">Nenhuma meta ainda. Que tal começar pela reserva de emergência?</li>'; return; }
+  ul.innerHTML=metas.map(m=>{
+    const alvo=Number(m.alvo), g=Number(m.guardado), falta=Math.max(0,alvo-g), pct=Math.min(100,Math.round(g/alvo*100));
+    let info;
+    if(falta<=0) info="🎉 Meta alcançada!";
+    else if(!m.prazo) info=`Faltam <b>${fmt0(falta)}</b> <span class="mut">· defina um prazo para saber quanto guardar por mês</span>`;
+    else { const n=difMeses(HOJE,m.prazo); info = n<=0 ? `Prazo de ${nomeMes(m.prazo)} chegou e faltam <b>${fmt0(falta)}</b>. Vale ajustar o prazo.` : `Guarde <b>${fmt0(Math.ceil(falta/n))} por mês</b> até ${nomeMes(m.prazo)} <span class="mut">· ${n} ${n===1?"mês":"meses"}, faltam ${fmt0(falta)}</span>`; }
+    return `<li class="meta" data-id="${esc(m.id)}"><div class="meta-top"><div><b>${esc(m.nome)}<span class="tipo-tag">${TIPOS[m.tipo]||"Meta"}</span></b><small>${pct}% concluído</small></div>
+      <div class="meta-val">${fmt0(g)}<small>de ${fmt0(alvo)}</small></div></div>
+      <div class="prog"><i style="width:${pct}%;${m.tipo==="divida"?"background:#D97706":""}"></i></div>
+      <p class="meta-info" style="margin:0">${info}</p>
+      <div class="meta-acoes"><input inputmode="decimal" placeholder="R$ 0,00" aria-label="Valor guardado agora em ${esc(m.nome)}" data-v><button class="btn sm" type="button" data-add>${m.tipo==="divida"?"Paguei":"Guardei"}</button><span style="flex:1"></span><button class="btn sm danger" type="button" data-del>Excluir</button></div></li>`;
+  }).join("");
+}
+$("metas").addEventListener("click",async e=>{
+  const li=e.target.closest(".meta"); if(!li) return; const m=metas.find(x=>x.id===li.dataset.id); if(!m) return;
+  if(e.target.closest("[data-add]")){ const v=parseMoney(li.querySelector("[data-v]").value); if(!(v>0)) return li.querySelector("[data-v]").focus();
+    const {error}=await sb.from("metas").update({guardado:Number(m.guardado)+v,atualizado_em:new Date().toISOString()}).eq("id",m.id); if(error) return alert("Não consegui salvar."); await carregarMetas(); }
+  if(e.target.closest("[data-del]")){ if(!confirm(`Excluir a meta “${m.nome}”?`)) return; await sb.from("metas").delete().eq("id",m.id); await carregarMetas(); }
+});
+$("mTipo").onchange=()=>{ const t=$("mTipo").value; if(t==="reserva"&&M){ $("mNome").value="Reserva de emergência"; $("mAlvo").value=String(M.reservaAlvo).replace(".",","); } if(t==="aposentadoria"&&!$("mNome").value) $("mNome").value="Aposentadoria"; };
+$("mForm").onsubmit=async e=>{
+  e.preventDefault(); const err=$("mErr"); err.hidden=true; const fail=t=>{ err.textContent=t; err.hidden=false; };
+  const nome=$("mNome").value.trim(), alvo=parseMoney($("mAlvo").value), g=$("mGuardado").value.trim()?parseMoney($("mGuardado").value):0, prazo=$("mPrazo").value||null;
+  if(!nome) return fail("Dê um nome para a meta."); if(!(alvo>0)) return fail("Digite o valor total da meta."); if(!(g>=0)) return fail("O valor já guardado não está certo.");
+  if(prazo && prazo<=HOJE) return fail("Escolha um prazo depois deste mês.");
+  const {error}=await sb.from("metas").insert({nome,tipo:$("mTipo").value,alvo,guardado:g,prazo}); if(error){ console.error(error); return fail("Não consegui salvar. Tente de novo."); }
+  e.target.reset(); await carregarMetas();
+};
+async function carregarMetas(){ const {data}=await sb.from("metas").select("*").order("criado_em"); metas=data||[]; M=calcular(); desenharTudo(); }
+
+/* ---------- simulador ---------- */
+function simular(){
+  const A=parseMoney($("sAporte").value)||0, P0=parseMoney($("sInicial").value)||0, anos=Math.min(40,Math.max(1,parseInt($("sAnos").value,10)||1)), taxa=(parseMoney($("sTaxa").value)||0)/100;
+  const i=Math.pow(1+taxa,1/12)-1; const pts=[{a:0,saldo:P0,inv:P0}]; let s=P0, inv=P0;
+  for(let mm=1;mm<=anos*12;mm++){ s=s*(1+i)+A; inv+=A; if(mm%12===0) pts.push({a:mm/12,saldo:s,inv}); }
+  $("simRes").innerHTML=`<div class="dest"><span>Vocês terão</span><b>${fmt0(s)}</b></div><div><span>Vocês guardaram</span><b>${fmt0(inv)}</b></div><div><span>Os juros renderam</span><b>${fmt0(s-inv)}</b></div>`;
+  const box=$("chSim"); box.innerHTML=""; const W=Math.max(280,box.clientWidth||320), H=200, pad={l:54,r:12,t:12,b:24}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const s2=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":`Em ${anos} anos: ${fmt0(s)}, sendo ${fmt0(inv)} guardados e ${fmt0(s-inv)} de juros`},null);
+  const p=Math.pow(10,Math.floor(Math.log10(s||1))); const mt=s/p; const max=(mt<=1?1:mt<=2?2:mt<=2.5?2.5:mt<=5?5:10)*p||100;
+  const nt=(mt>2&&mt<=2.5)||(mt>2.5&&mt<=5)?5:4; for(let t=0;t<=nt;t++){ const v=max*t/nt, y=pad.t+ih-v/max*ih; el("line",{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:t?cssv("--grid"):cssv("--faint")},s2); txt(s2,pad.l-6,y+4,fmtK(v),{"text-anchor":"end"}); }
+  const xs=a=>pad.l+iw*a/anos, yv=v=>pad.t+ih-v/max*ih;
+  const passo=anos<=10?1:anos<=20?5:10; pts.forEach(q=>{ if(q.a%passo===0||q.a===anos) txt(s2,xs(q.a),H-6,q.a?q.a+" a":"hoje",{"text-anchor":q.a===0?"start":q.a===anos?"end":"middle"}); });
+  const cor=cssv("--rico-d");
+  const g=el("linearGradient",{id:"gS",x1:0,x2:0,y1:0,y2:1},el("defs",{},s2)); el("stop",{offset:"0%","stop-color":cor,"stop-opacity":.25},g); el("stop",{offset:"100%","stop-color":cor,"stop-opacity":.02},g);
+  el("path",{d:`M${xs(0)},${yv(0)}L`+pts.map(q=>`${xs(q.a)},${yv(q.saldo)}`).join("L")+`L${xs(anos)},${yv(0)}Z`,fill:"url(#gS)"},s2);
+  el("path",{d:"M"+pts.map(q=>`${xs(q.a)},${yv(q.inv)}`).join("L"),fill:"none",stroke:cssv("--muted"),"stroke-width":2,"stroke-dasharray":"6 5"},s2);
+  el("path",{d:"M"+pts.map(q=>`${xs(q.a)},${yv(q.saldo)}`).join("L"),fill:"none",stroke:cor,"stroke-width":2.5,"stroke-linejoin":"round"},s2);
+  
+  const mk=el("circle",{r:5,fill:cor,stroke:"#fff","stroke-width":2,opacity:0},s2);
+  const step=iw/anos; pts.forEach(q=>{ const hit=el("rect",{x:xs(q.a)-step/2,y:pad.t,width:step,height:ih,fill:"transparent"},s2);
+    const html=()=>`<b>${q.a?q.a+(q.a===1?" ano":" anos"):"Hoje"}</b><div>Total ${fmt0(q.saldo)}</div><div>Guardado ${fmt0(q.inv)}</div><div>Juros ${fmt0(q.saldo-q.inv)}</div>`;
+    hit.addEventListener("pointerenter",e=>{ mk.setAttribute("cx",xs(q.a)); mk.setAttribute("cy",yv(q.saldo)); mk.setAttribute("opacity",1); mostrarTip(html(),e.clientX,e.clientY); });
+    hit.addEventListener("pointermove",e=>mostrarTip(html(),e.clientX,e.clientY)); hit.addEventListener("pointerleave",()=>{ mk.setAttribute("opacity",0); esconderTip(); }); });
+  box.appendChild(s2);
+}
+["sAporte","sInicial","sAnos","sTaxa"].forEach(id=>$(id).addEventListener("input",simular));
+
+/* ---------- aprenda ---------- */
+const POR_CAT=[
+  [/combust|gasolina|abastec/i,"Combustível","Compare preços por aplicativo antes de abastecer, mantenha os pneus calibrados (gasta menos) e junte trajetos num só passeio. Programas de fidelidade de posto devolvem uma parte."],
+  [/estaciona/i,"Estacionamento","Se usa sempre o mesmo lugar, mensalista sai bem mais barato que avulso. Para trajetos curtos, compare com transporte por aplicativo ou ônibus."],
+  [/aliment|comida|lanche|restaur|delivery/i,"Comer fora e delivery","Defina um valor por semana para delivery e lanches e lance cada um como gasto. Cozinhar em maior quantidade no domingo e congelar marmitas corta boa parte desse gasto."],
+  [/compras comida|mercado|supermerc/i,"Mercado","Vá com lista e de barriga cheia, compare marcas próprias (costumam ser 20 a 30% mais baratas) e faça a compra grande no atacarejo, deixando para o mercadinho só o que estraga rápido."],
+  [/internet|telefone|celular/i,"Internet e celular","Uma vez por ano, ligue pedindo desconto ou ameace cancelar: as operadoras costumam baixar o preço. Veja se um combo família sai mais barato que planos separados."],
+  [/moradia|luz|energia|água/i,"Casa","Banho mais curto, lâmpadas LED e tirar aparelhos da tomada em espera reduzem a conta de luz. Acompanhe a bandeira tarifária: nos meses de bandeira vermelha, segure o uso do ar e do chuveiro."],
+  [/^ia$|assinatura|streaming/i,"Assinaturas","Liste todas as assinaturas (IA, streaming, apps) e cancele as que não usaram no último mês. Dá para alternar: um streaming por vez, trocando a cada mês."],
+  [/curso|faculdade/i,"Estudos","Pergunte por desconto de pagamento em dia, à vista ou de indicação. Muitas faculdades e cursos negociam, principalmente na rematrícula."]
+];
+function desenharAprenda(){
+  const top=M?Object.entries(M.porCat).sort((a,b)=>b[1]-a[1]).slice(0,6):[];
+  const suas=[]; top.forEach(([cat,v])=>{ const t=POR_CAT.find(([re])=>re.test(cat)); if(t && !suas.some(s=>s[0]===t[1])) suas.push([t[1],t[2]+` Hoje essa parte custa em média ${fmt0(v)} por mês.`]); });
+  const dica=(b,p,sua)=>`<div class="dica ${sua?"sua":""}"><b>${b}</b><p>${p}</p></div>`;
+  const div=M&&M.temDivida ? dica("Dívidas na lista de vocês",`O app encontrou lançamentos que parecem dívida ou juros: ${M.dividas.slice(0,3).map(c=>esc(c.nome)).join(", ")||"metas de dívida"}. Quitar essas primeiro é o investimento que mais rende.`,true) : "";
+  const blocos=[
+    ["💰","Poupar","Criar o hábito de guardar",[
+      ["Pague-se primeiro","No dia em que o dinheiro entra, separe o valor de guardar antes de pagar qualquer coisa. O que sobra no fim do mês costuma ser zero."],
+      ["Automatize","Agende uma transferência automática para outra conta ou investimento no dia do pagamento. O que não se vê, não se gasta."],
+      ["Comece pequeno","Guardar R$ 50 por mês todo mês vale mais que R$ 500 uma vez só. Aumente o valor a cada aumento de renda."],
+      ["Use o dinheiro extra","13º, bônus, restituição e freelas: destine pelo menos metade para a reserva ou para as metas."],
+      ...(M&&M.sobra>0?[["Para vocês",`Com a sobra média de ${fmt0(M.sobra)}, guardar 20% das entradas seria ${fmt0(M.ent*0.2)} por mês.`]]:[])
+    ]],
+    ["✂️","Economizar","Gastar melhor, sem sofrer",[
+      ...suas.map(([b,p])=>[b,p,true]),
+      ["Regra das 24 horas","Antes de uma compra que não estava planejada, espere um dia. Metade das vontades passa."],
+      ["Lance tudo","Todo gasto lançado no app, até o cafezinho. Ver o total do mês já faz gastar menos."],
+      ["Revise as contas fixas uma vez por ano","Seguro, plano de celular, internet, tarifas do banco: renegociar cada um é economia que se repete todo mês."],
+      ["Cuidado com parcelas","Várias parcelas pequenas viram uma conta grande. Some todas antes de parcelar mais uma."]
+    ]],
+    ["📈","Investir","Fazer o dinheiro trabalhar",[
+      ["Primeiro a reserva, depois o resto","Só invista em coisas que oscilam (ações, fundos imobiliários) depois que a reserva de emergência estiver completa."],
+      ["Juros compostos","Os rendimentos passam a render também. Por isso o tempo importa mais que o valor: veja no simulador acima."],
+      ["Diversifique","Não coloque tudo num lugar só. Separe por objetivo: reserva, metas de médio prazo e longo prazo."],
+      ["Desconfie de promessas","Rendimento muito acima do mercado com “garantia” é sinal de golpe. Confira se a instituição é autorizada pelo Banco Central ou pela CVM."]
+    ],`<div class="inv">
+      <div><b>Tesouro Selic</b><span class="risco r1">risco baixo</span><p>Título do governo, acompanha a taxa básica de juros e dá para resgatar em qualquer dia útil. Ótimo para a reserva de emergência.</p></div>
+      <div><b>CDB com liquidez diária</b><span class="risco r1">risco baixo</span><p>Empréstimo para um banco. Procure os que pagam 100% do CDI ou mais. Tem garantia do FGC até R$ 250 mil por CPF por instituição.</p></div>
+      <div><b>LCI e LCA</b><span class="risco r1">risco baixo</span><p>Parecidos com o CDB, em geral sem imposto de renda para pessoa física, mas o dinheiro fica preso por um prazo mínimo. Bons para metas com data marcada.</p></div>
+      <div><b>Tesouro IPCA+</b><span class="risco r2">risco médio</span><p>Protege da inflação e é indicado para objetivos longos, como a aposentadoria. Se resgatar antes do vencimento, o valor pode variar.</p></div>
+      <div><b>Fundos imobiliários e ações</b><span class="risco r3">risco alto</span><p>Podem render mais no longo prazo, mas sobem e descem. Só para dinheiro que pode ficar anos aplicado e depois da reserva pronta.</p></div>
+      <div><b>Poupança</b><span class="risco r1">risco baixo</span><p>Simples, mas quando os juros estão altos costuma render menos que o Tesouro Selic e bons CDBs de liquidez diária.</p></div></div>`],
+    ["🧭","Planejar o futuro","Metas, aposentadoria e organização",[
+      ["Metas com nome, valor e prazo","“Juntar dinheiro” não motiva; “R$ 6.000 para a viagem de julho” motiva. Cadastre as metas acima e o app calcula o valor por mês."],
+      ["Reunião financeira do casal","Uma vez por mês, 20 minutos: olhem juntos a Análise do mês, os gráficos e o progresso das metas. Decidam juntos o destino da sobra."],
+      ["Aposentadoria começa cedo","Quem começa aos 30 precisa guardar bem menos por mês que quem começa aos 45, por causa dos juros compostos. Previdência privada (PGBL/VGBL) e Tesouro IPCA+ são caminhos comuns."],
+      ["Proteja a família","Revise seguros de vida e saúde e mantenha documentos e senhas de bancos acessíveis a quem precisa, num lugar seguro."],
+      ["Planeje os gastos do ano","IPVA, IPTU, matrícula, material escolar e presentes de fim de ano não são surpresa. Divida o valor por 12 e guarde todo mês numa meta."]
+    ]],
+    ["🧾","Sair das dívidas","Quando os juros estão comendo a renda",[
+      ...(div?[["__html",div]]:[]),
+      ["Liste todas","Para cada dívida: quanto falta, parcela e juros ao mês. Use a meta do tipo “Quitar dívida” para acompanhar."],
+      ["Ataque a mais cara primeiro","Cartão rotativo e cheque especial vêm antes de tudo. Troque dívida cara por mais barata (consignado, por exemplo) só se parar de usar a cara."],
+      ["Renegocie","Bancos e lojas costumam dar descontos grandes para pagamento à vista ou em mutirões de renegociação. Confira o Serasa e o Desenrola quando houver campanhas."],
+      ["Limpar o nome","Depois de quitar, o nome sai dos cadastros de inadimplentes em até 5 dias úteis. Guarde o comprovante de quitação."]
+    ]]
+  ];
+  $("aprenda").innerHTML=blocos.map(([ic,t,s,lista,extra],i)=>`<details><summary><span class="ic" aria-hidden="true">${ic}</span><span>${t}<small>${s}</small></span></summary><div class="dicas">${lista.map(([b,p,sua])=>b==="__html"?p:dica(b,p,sua)).join("")}${extra||""}</div></details>`).join("");
+  if(M && M.temDivida){ const d=$("aprenda").querySelectorAll("details")[4]; if(d) d.open=true; }
+  else if(M && M.sobra<0){ $("aprenda").querySelectorAll("details")[1].open=true; }
+}
+
+function desenharTudo(){ desenharDiag(); desenharPassos(); desenharRegra(); desenharReserva(); desenharMetas(); desenharAprenda(); simular(); }
+let rT; addEventListener("resize",()=>{ clearTimeout(rT); rT=setTimeout(simular,150); });
+
+function aviso(t){ $("load").hidden=true; $("aviso").hidden=false; if(t) $("avisoTx").textContent=t; }
+(async()=>{
+  if(!sb) return aviso("Não consegui carregar. Confira a internet e abra no Safari ou Chrome.");
+  const {data:{session}}=await sb.auth.getSession(); if(!session) return aviso();
+  const {data:pf}=await sb.from("perfis").select("status,casa_id").eq("user_id",session.user.id).maybeSingle();
+  if(!pf||pf.status!=="aprovado"||!pf.casa_id) return aviso("Seu acesso ainda não foi liberado.");
+  const [c,e,cs,mt]=await Promise.all([sb.from("contas").select("*"),sb.from("entradas").select("*"),sb.from("casas").select("nome").eq("id",pf.casa_id).maybeSingle(),sb.from("metas").select("*").order("criado_em")]);
+  if(c.error||e.error) return aviso("Não consegui carregar os dados. Tente de novo.");
+  contas=c.data||[]; entradas=e.data||[]; metas=mt.data||[];
+  if(cs.data&&cs.data.nome) $("casaNome").textContent=cs.data.nome;
+  M=calcular();
+  if(M&&M.sobra>0) $("sAporte").value=String(Math.max(50,Math.round(M.sobra*0.3/10)*10));
+  $("load").hidden=true; $("app").hidden=false; desenharTudo();
+})();
+
+</script>
+</body>
+</html>

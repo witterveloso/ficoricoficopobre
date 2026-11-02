@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Política de privacidade · Fico Rico Fico Pobre</title>
+<meta name="theme-color" content="#12B76A">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;
+  --bg:#FFF9F1;--surface:#FFFFFF;--sunk:#F6F1E8;--line:#E5E7EB;--grid:#EFEBE4;
+  --ink:#1F2937;--muted:#6B7280;--faint:#9CA3AF;
+  --rico:#12B76A;--rico-d:#0F7A43;--pobre:#E53935;--mark:#FFC533;
+  --s-ent:#0F7A43;--s-sai:#D97706;--s-conta:#2A78D6;--s-gasto:#D97706;--s-cat:#2A78D6;
+  --pos:#0F7A43;--neg:#D6336C;
+  --f-display:"Baloo 2",system-ui,sans-serif;--f-body:Inter,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.voltar{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--rico-d);font-weight:700;font-size:15px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px}
+.voltar:hover{border-color:var(--rico)}
+h1{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.1;margin:0}
+h1 small{display:block;font-family:var(--f-body);font-weight:500;font-size:14px;color:var(--muted);margin-top:2px}
+.ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.mes{display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.mes button{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:18px;color:var(--ink)}
+.mes button:hover{background:var(--sunk)} .mes button:focus-visible{outline:3px solid var(--rico);outline-offset:1px}
+.mes b{font-family:var(--f-display);font-size:18px;min-width:150px;text-align:center}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+.seg button{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:3px solid var(--rico);outline-offset:1px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.card{grid-column:span 12;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:800;font-size:19px;margin:0}
+.card .sub{margin:2px 0 12px;color:var(--muted);font-size:13.5px}
+.tiles{grid-column:span 12;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;min-width:0}
+.tile span{display:block;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tile b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(22px,5.4vw,30px);line-height:1.15;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.tile small .up{color:var(--pobre);font-weight:700} .tile small .down{color:var(--rico-d);font-weight:700}
+.tile.dest{background:var(--rico-d);border-color:var(--rico-d);color:#fff} .tile.dest span,.tile.dest small{color:#D1FAE5}
+.tile.dest.neg{background:var(--pobre);border-color:var(--pobre)} .tile.dest.neg span,.tile.dest.neg small{color:#FFE4E4}
+@media (min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:1000px){.c-7{grid-column:span 7}.c-5{grid-column:span 5}.c-6{grid-column:span 6}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:-4px 0 8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.legend i.ln{height:3px;border-radius:2px;vertical-align:3px;width:16px}
+.legend i.dash{height:0;border-top:2px dashed currentColor;width:16px;vertical-align:3px;border-radius:0}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--f-body);font-size:11.5px;fill:var(--muted)}
+.chart .lab{fill:var(--ink);font-weight:600;font-size:12px}
+.chart .val{fill:var(--ink);font-weight:700;font-size:12px}
+.vazio{color:var(--muted);font-size:14px;padding:18px 0}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:240px;opacity:0;transition:opacity .12s}
+.tip b{font-family:var(--f-display);font-size:14px} .tip .r{display:flex;align-items:center;gap:6px} .tip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tip.on{opacity:1}
+.tbl-btn{all:unset;cursor:pointer;color:var(--rico-d);font-weight:600;font-size:13px;text-decoration:underline;margin-top:8px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left} td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.top{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.top li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.top .pos{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--faint);text-align:center}
+.top .nm{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .mt{display:block;margin-top:2px;font-size:12.5px;color:var(--muted)}
+.top .vl{font-family:var(--f-display);font-weight:800;font-size:16px;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:4px;vertical-align:1px}
+.tag.g{background:#FFF4DB;color:#92400E} .tag.c{background:#E3EEFB;color:#1E4E8C}
+.aviso{max-width:460px;margin:12vh auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}
+.aviso a{display:inline-block;margin-top:12px;background:var(--rico);color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:12px 18px;box-shadow:0 4px 0 var(--rico-d)}
+.load{color:var(--muted);text-align:center;padding:40px 0}
+
+.doc{max-width:760px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(18px,4vw,36px)}
+.doc h2{font-family:var(--f-display);font-weight:800;font-size:20px;margin:26px 0 6px}
+.doc p,.doc li{font-size:15px;line-height:1.65;color:var(--ink)}
+.doc ul{padding-left:20px;margin:6px 0}
+.doc .upd{color:var(--muted);font-size:13.5px;margin:4px 0 0}
+.doc a{color:var(--rico-d);font-weight:600}
+.rodape{text-align:center;color:var(--muted);font-size:12.5px;margin:20px 0 0}
+.rodape a{color:var(--rico-d);font-weight:600;text-decoration:none;margin:0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Política de privacidade<small>Fico Rico Fico Pobre</small></h1><a class="voltar" href="./">← Voltar ao app</a></header>
+  <article class="doc">
+    <p class="upd">Última atualização: 30 de outubro de 2026</p>
+    <p>Esta política explica quais dados o Fico Rico Fico Pobre coleta, para que usa, com quem compartilha e como você pode pedir acesso, correção ou exclusão, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).</p>
+    <h2>Quem é o responsável</h2>
+    <p>O Fico Rico Fico Pobre é desenvolvido e mantido por Witter Veloso, controlador dos dados tratados no app. Contato para assuntos de privacidade: <a href="mailto:witterveloso@gmail.com">witterveloso@gmail.com</a>.</p>
+    <h2>Quais dados coletamos</h2>
+    <ul>
+      <li><b>Dados de conta:</b> e-mail, nome e, se você entrar com o Google, o nome e a foto básicos da sua conta Google. Não recebemos sua senha do Google.</li>
+      <li><b>Dados que você lança:</b> contas, gastos, entradas, valores, datas, categorias, observações, metas e notas do mês.</li>
+      <li><b>Conta da casa:</b> o e-mail da pessoa que você convida para dividir as contas.</li>
+      <li><b>WhatsApp, se você ligar:</b> seu número de WhatsApp, as mensagens e áudios que você manda para o robô e o texto transcrito desses áudios.</li>
+      <li><b>Dados técnicos:</b> registros de acesso necessários para segurança e funcionamento.</li>
+    </ul>
+    <p>Nunca pedimos nem guardamos senha de banco, número de cartão ou dados de conta bancária.</p>
+    <h2>Para que usamos</h2>
+    <ul>
+      <li>Criar e proteger sua conta e liberar o acesso depois da aprovação do administrador.</li>
+      <li>Mostrar seus lançamentos, saldos, gráficos, análises, dicas e metas.</li>
+      <li>Compartilhar a conta da casa apenas com a pessoa que você convidou.</li>
+      <li>Entender seus áudios e textos no WhatsApp e transformá-los em lançamentos.</li>
+      <li>Cumprir obrigações legais e responder a pedidos seus.</li>
+    </ul>
+    <h2>Com quem compartilhamos</h2>
+    <p>Não vendemos seus dados. Usamos serviços que processam dados em nosso nome:</p>
+    <ul>
+      <li><b>Supabase:</b> banco de dados e login, com servidores em São Paulo.</li>
+      <li><b>Netlify:</b> hospedagem das páginas do app.</li>
+      <li><b>Google:</b> login com conta Google, quando você escolhe essa opção.</li>
+      <li><b>Meta (WhatsApp):</b> envio e recebimento de mensagens, se você ligar o WhatsApp.</li>
+      <li><b>OpenAI:</b> transcrição de áudios e interpretação dos comandos enviados pelo WhatsApp.</li>
+    </ul>
+    <h2>Quem vê seus dados</h2>
+    <p>Na conta pessoal, só você. Na conta da casa, você e a pessoa da casa. O administrador do sistema aprova e bloqueia acessos, mas não vê os valores lançados.</p>
+    <h2>Por quanto tempo guardamos</h2>
+    <p>Enquanto sua conta existir. Se você pedir a exclusão, apagamos seus dados em até 30 dias, exceto o que a lei obrigar a manter.</p>
+    <h2>Seus direitos</h2>
+    <p>Você pode pedir confirmação de tratamento, acesso, correção, portabilidade, anonimização ou exclusão dos seus dados, e revogar o consentimento, escrevendo para <a href="mailto:witterveloso@gmail.com">witterveloso@gmail.com</a>. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+    <h2>Segurança</h2>
+    <p>Os dados trafegam com criptografia, e cada casa só acessa os próprios registros por regras aplicadas no banco de dados.</p>
+    <h2>Mudanças nesta política</h2>
+    <p>Se esta política mudar, a data no topo será atualizada e avisaremos no app quando a mudança for importante.</p>
+
+  </article>
+  <p class="rodape"><a href="privacidade.html">Política de privacidade</a><a href="termos.html">Termos de uso</a></p>
+  <p class="rodape">Desenvolvido por Witter Veloso - Soluções com Inteligência Artificial</p>
+</div>
+</body>
+</html>
