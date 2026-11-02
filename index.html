@@ -232,6 +232,8 @@ h1,h2,h3,.month strong,.listhead h2,.ent-head h2,.form h3,.empty strong{font-fam
 .saldo{position:relative;border-radius:22px;padding:20px 20px 18px;color:#fff;background:linear-gradient(135deg,var(--rico) 0%,var(--rico-deep) 100%);box-shadow:0 10px 24px rgba(15,122,67,.25);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;overflow:hidden}
 .saldo.red{background:linear-gradient(135deg,var(--pobre) 0%,var(--pobre-deep) 100%);box-shadow:0 10px 24px rgba(229,57,53,.25)}
 .saldo.yellow{background:linear-gradient(135deg,#F5B70A 0%,#D97706 100%);box-shadow:0 10px 24px rgba(217,119,6,.22)}
+.saldo.falso{background:linear-gradient(135deg,#7C3AED 0%,#4C1D95 100%);box-shadow:0 10px 24px rgba(109,40,217,.28)}
+.sem.falso{background:#EDE9FE;border-color:transparent} .sem.falso b{color:#6D28D9}
 .saldo.none{background:linear-gradient(135deg,#9CA3AF,#6B7280);box-shadow:none}
 .saldo .label{color:rgba(255,255,255,.85)}
 .saldo b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(30px,8vw,42px);line-height:1.05;margin:2px 0 4px}
@@ -1483,27 +1485,30 @@ function renderEntradas(k, ents, eFixa, eCnpj, total, ar){
   $("eFixa").textContent = fmt(eFixa); $("eCnpj").textContent = fmt(eCnpj); $("eCont").textContent = fmt(total);
   const sob = eFixa+eCnpj-total; $("eSobra").textContent = fmt(sob); $("eSobra").style.color = sob<0?"var(--bad)":sob>0?"var(--ok)":"";
   const ent=eFixa+eCnpj, sobra=ent-total, sem=$("sem");
-  const nivel = !ent && !total ? "" : sobra<0 || (ent<=0 && total>0) ? "red" : sobra <= ent*0.20 ? "yellow" : "green";
+  const nivel0 = !ent && !total ? "" : sobra<0 || (ent<=0 && total>0) ? "red" : sobra <= ent*0.20 ? "yellow" : "green";
+  const atr = atrasadasAte(k), atrV = atr.reduce((a,x)=>a+x.v,0), depois = sobra-atrV;
+  const nivel = (nivel0==="green"||nivel0==="yellow") && atrV>0 ? "falso" : nivel0;
   const pctSobra = ent>0 ? Math.max(0,Math.round(sobra/ent*100)) : 0;
   sem.className = "sem "+nivel;
   $("semAv").src = (nivel==="red"||nivel==="yellow") ? AV_POBRE : AV_RICO;
   const sc=$("saldoCard"); sc.className="saldo "+(nivel||"none");
   $("sdVal").textContent = (sobra<0?"- ":"")+fmt(Math.abs(sobra));
-  $("sdSub").textContent = nivel ? `Já entrou ${fmt(ent)} · Saídas ${fmt(total)}${ar&&ar.v>0?` · ainda entram ${fmt(ar.v)} (com elas: ${sobra+ar.v<0?"- ":""}${fmt(Math.abs(sobra+ar.v))})`:""}` : "Cadastre entradas e contas";
+  $("sdSub").textContent = nivel==="falso" ? `Contas atrasadas: ${fmt(atrV)} · ${depois>=0?`Pagando todas, ainda sobram ${fmt(depois)}`:`Pagando todas, faltariam ${fmt(-depois)}`}` : nivel ? `Já entrou ${fmt(ent)} · Saídas ${fmt(total)}${ar&&ar.v>0?` · ainda entram ${fmt(ar.v)} (com elas: ${sobra+ar.v<0?"- ":""}${fmt(Math.abs(sobra+ar.v))})`:""}` : "Cadastre entradas e contas";
   const FR={
     green:[`Tá rico! 👑 Ainda sobram ${pctSobra}% da sua renda.`,`Fico rico! 🐷👑 O porquinho agradece: sobram ${pctSobra}% da renda.`,`Pode sorrir: ${pctSobra}% da renda ainda está no bolso. 😎`,`Milionário? Ainda não. Mas sobram ${pctSobra}% da renda. 💰`],
     yellow:[`Fica esperto! Só sobram ${pctSobra}% da sua renda.`,`Pé no freio! 🚦 Só sobram ${pctSobra}% da renda.`,`O porquinho está suando 😅 Só sobram ${pctSobra}% da renda.`,`Hora de economizar: só restam ${pctSobra}% da renda do mês.`],
+    falso:[`Falso rico! 🎭 Tem ${fmt(sobra)} sobrando, mas ${fmt(atrV)} em contas atrasadas.`,"Falso rico! 🎭 O dinheiro está aí, mas as contas atrasadas também.",`Falso rico! 🎭 Antes de gastar, quite os ${fmt(atrV)} atrasados.`,"Falso rico! 🎭 Parece que sobra, mas tem conta esperando pagamento."],
     red:["Tá pobre! 💸 Saiu mais dinheiro do que entrou.","Fico pobre! 😭 Os gastos passaram da renda do mês.","O porquinho chorou: gastou mais do que entrou. 🐷💧","Alerta vermelho! 🚨 As saídas passaram as entradas."]};
   const diaN=Math.floor(Date.now()/864e5);
   $("sdMsg").textContent = nivel ? FR[nivel][diaN % FR[nivel].length] : "";
   $("sdMsg").hidden = !nivel;
   $("sdPig").src = (nivel==="red"||nivel==="yellow") ? AV_POBRE : AV_RICO;
-  { const pb=$("pigBox"), novo="pigbox "+({green:"pig-rico",yellow:"pig-atencao",red:"pig-pobre"}[nivel]||"");
+  { const pb=$("pigBox"), novo="pigbox "+({green:"pig-rico",yellow:"pig-atencao",red:"pig-pobre",falso:"pig-atencao"}[nivel]||"");
     if(pb.className!==novo){ pb.className=novo+" pig-entra"; setTimeout(()=>pb.classList.remove("pig-entra"),700); } }
-  $("sdTips").innerHTML = nivel==="yellow" ? "<li>Segure os gastos do dia a dia até a próxima entrada</li><li>Veja se dá para adiar alguma compra</li><li>Contas atrasadas não entram no saldo: são só lembretes</li>" : "<li>Revise seus gastos</li><li>Veja as contas em atraso</li><li>Ajuste o que dá para cortar este mês</li>";
-  $("sdTips").hidden = nivel!=="red" && nivel!=="yellow";
-  $("saud").textContent = {red:"Gastou mais do que entrou. Bora ajustar?",yellow:"Atenção: a renda do mês está acabando.",green:"Está sobrando dinheiro. Continue assim!"}[nivel]||"Olá! Qual lado hoje?";
-  $("semTxt").textContent = ({red:"Tá pobre",yellow:"Atenção",green:"Tá rico"}[nivel]||"Sem lançamentos");
+  $("sdTips").innerHTML = nivel==="falso" ? `<li>Use o saldo para pagar as contas atrasadas primeiro</li><li>Comece pelas que cobram juros ou multa maiores</li><li>${depois>=0?"Depois de quitar tudo, o que sobrar é seu de verdade":"Se não der para pagar tudo, negocie um parcelamento"}</li>` : nivel==="yellow" ? "<li>Segure os gastos do dia a dia até a próxima entrada</li><li>Veja se dá para adiar alguma compra</li><li>Contas atrasadas não entram no saldo: são só lembretes</li>" : "<li>Revise seus gastos</li><li>Veja as contas em atraso</li><li>Ajuste o que dá para cortar este mês</li>";
+  $("sdTips").hidden = nivel!=="red" && nivel!=="yellow" && nivel!=="falso";
+  $("saud").textContent = {red:"Gastou mais do que entrou. Bora ajustar?",yellow:"Atenção: a renda do mês está acabando.",green:"Está sobrando dinheiro. Continue assim!",falso:"Você tem dinheiro, mas tem conta atrasada."}[nivel]||"Olá! Qual lado hoje?";
+  $("semTxt").textContent = ({red:"Tá pobre",yellow:"Atenção",green:"Tá rico",falso:"Falso rico"}[nivel]||"Sem lançamentos");
   $("semVal").textContent = nivel ? `Entradas ${fmt(ent)} · Saídas ${fmt(total)}` : "Cadastre entradas e contas";
   sem.title = "Vermelho: contas maiores que as entradas. Amarelo: sobra menor que 15% das entradas. Verde: sobra confortável.";
   const usa = ent ? Math.round(total/ent*100) : (total?100:0);
@@ -1938,7 +1943,7 @@ $("tForm").onsubmit=async e=>{
 /* ---------- tutorial de primeiro acesso ---------- */
 const TOUR=[
   [null,"Bem-vindo ao Fico Rico Fico Pobre! 🐷","Em um minutinho você aprende a usar o app. Pode pular quando quiser: o tutorial fica no rodapé para consultar depois."],
-  ["#saldoCard","Seu saldo do mês","Mostra quanto sobra: o que já entrou menos o que saiu. Verde, você tá rico. Amarelo, sobram 20% da renda ou menos. Vermelho, saiu mais do que entrou."],
+  ["#saldoCard","Seu saldo do mês","Mostra quanto sobra: o que já entrou menos o que saiu. Verde, você tá rico. Amarelo, sobram 20% da renda ou menos. Vermelho, saiu mais do que entrou. Roxo, <b>falso rico</b>: sobra dinheiro, mas tem conta atrasada esperando."],
   [".topsum .ts.in","Já entrou no mês","Só conta a renda que já caiu na conta. O que ainda vai entrar aparece como “a receber”, sem inflar o saldo."],
   [".topsum .ts.out","Gastos do mês","Soma as contas do mês e os gastos do dia a dia. Embaixo você vê quanto foi de cada um."],
   [".topsum .ts.late","Contas atrasadas","Ficam aqui só como lembrete e não mexem no saldo do mês. Toque no quadro para ver a lista."],
