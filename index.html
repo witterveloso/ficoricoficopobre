@@ -1992,7 +1992,8 @@ const TOUR=[
 ];
 let tourI=0, tourUid=null;
 function tourVisivel(sel){ if(!sel) return true; const el=document.querySelector(sel); if(!el) return false; const r=el.getBoundingClientRect(); return !!(el.offsetParent||el.getClientRects().length) && r.width>0 && r.height>0; }
-function iniciarTour(uid){ tourUid=uid||tourUid; tourI=0; if(!$("tourBox")){ document.body.insertAdjacentHTML("beforeend",`<div id="tourBox" class="tour" hidden><div class="tour-luz" id="tourLuz"></div><div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTit"><div class="tour-top"><span class="tour-n" id="tourN"></span><button type="button" class="tour-pular" id="tourPular">Pular tutorial</button></div><h3 id="tourTit"></h3><p id="tourTxt"></p><div class="tour-dots" id="tourDots" aria-hidden="true"></div><div class="tour-acoes"><button type="button" class="btn ghost" id="tourVoltar">Voltar</button><button type="button" class="btn" id="tourProx">Próximo</button></div></div></div>`);
+function marcarTourVisto(){ try{ if(tourUid) localStorage.setItem("frfp-tour-v1-"+tourUid,"1"); }catch(e){} try{ sb.auth.updateUser({data:{tour_visto:true}}).catch(()=>{}); }catch(e){} }
+function iniciarTour(uid,primeira){ tourUid=uid||tourUid; tourI=0; if(primeira) marcarTourVisto(); if(!$("tourBox")){ document.body.insertAdjacentHTML("beforeend",`<div id="tourBox" class="tour" hidden><div class="tour-luz" id="tourLuz"></div><div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTit"><div class="tour-top"><span class="tour-n" id="tourN"></span><button type="button" class="tour-pular" id="tourPular">Pular tutorial</button></div><h3 id="tourTit"></h3><p id="tourTxt"></p><div class="tour-dots" id="tourDots" aria-hidden="true"></div><div class="tour-acoes"><button type="button" class="btn ghost" id="tourVoltar">Voltar</button><button type="button" class="btn" id="tourProx">Próximo</button></div></div></div>`);
     $("tourPular").onclick=()=>fecharTour(); $("tourVoltar").onclick=()=>passoTour(-1); $("tourProx").onclick=()=>passoTour(1);
     addEventListener("resize",()=>{ if(!$("tourBox").hidden) mostrarPasso(); }); addEventListener("keydown",e=>{ if($("tourBox").hidden) return; if(e.key==="Escape") fecharTour(); if(e.key==="ArrowRight") passoTour(1); if(e.key==="ArrowLeft") passoTour(-1); }); }
   $("tourBox").hidden=false; document.body.classList.add("tour-on"); mostrarPasso(); }
@@ -2012,7 +2013,7 @@ function mostrarPasso(){
     let left = Math.min(Math.max(12, r.left+r.width/2-cw/2), vw-cw-12);
     card.style.top=top+"px"; card.style.left=left+"px"; $("tourProx").focus({preventScroll:true}); });
 }
-function fecharTour(){ $("tourBox").hidden=true; document.body.classList.remove("tour-on"); try{ if(tourUid) localStorage.setItem("frfp-tour-v1-"+tourUid,"1"); }catch(e){} scrollTo({top:0,behavior:"smooth"}); }
+function fecharTour(){ $("tourBox").hidden=true; document.body.classList.remove("tour-on"); marcarTourVisto(); scrollTo({top:0,behavior:"smooth"}); }
 $("tourBtn").onclick=()=>iniciarTour(meuPerfil&&meuPerfil.user_id);
 
 /* ---------- suporte ---------- */
@@ -2091,7 +2092,10 @@ async function entrarNoApp(session){
     const checar=async()=>{ if(Date.now()-ult>LIM){ try{ await sb.auth.signOut(); }catch(e){} try{ sessionStorage.setItem("frfp-saiu","1"); }catch(e){} location.reload(); } };
     setInterval(checar,60*1000); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) checar(); }); })();
   try{ await carregarCasa(); }catch(e){ console.error(e); }
-  setTimeout(()=>{ try{ if(!localStorage.getItem("frfp-tour-v1-"+session.user.id)) iniciarTour(session.user.id); }catch(e){} },1200);
+  { const uid=session.user.id, visto=(session.user.user_metadata||{}).tour_visto; let local=null; try{ local=localStorage.getItem("frfp-tour-v1-"+uid); }catch(e){}
+    if(visto && !local){ try{ localStorage.setItem("frfp-tour-v1-"+uid,"1"); }catch(e){} }
+    if(!visto && !local) setTimeout(()=>iniciarTour(uid,true),1200);
+    else if(!visto && local){ try{ sb.auth.updateUser({data:{tour_visto:true}}).catch(()=>{}); }catch(e){} } }
   sb.channel("casa-config").on("postgres_changes",{event:"*",schema:"public",table:"casas"},()=>carregarCasa().catch(console.error))
     .on("postgres_changes",{event:"*",schema:"public",table:"perfis"},()=>carregarCasa().catch(console.error))
     .on("postgres_changes",{event:"*",schema:"public",table:"convites"},()=>carregarCasa().catch(console.error)).subscribe();
