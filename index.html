@@ -536,17 +536,17 @@ a.casal-btn{text-decoration:none;color:inherit}
   </form>
   <form class="auth-card teste-card" id="tForm" novalidate hidden>
     <h2 class="t-tit">🧪 Quero testar o Fico Rico Fico Pobre</h2>
-    <p>O app está em teste com um grupo pequeno. Deixe seus dados e o administrador libera seu acesso. Em troca, só pedimos sua opinião sincera.</p>
-    <label class="label" for="tNome">Seu nome</label><input id="tNome" maxlength="80" autocomplete="name" placeholder="Como podemos te chamar?">
-    <label class="label" for="tEmail">E-mail</label><input id="tEmail" type="email" inputmode="email" maxlength="120" autocomplete="email" placeholder="seu@email.com">
+    <p>O app está em teste com um grupo pequeno. Preencha todos os campos e o administrador libera seu acesso. Em troca, só pedimos sua opinião sincera.</p>
+    <label class="label" for="tNome">Seu nome</label><input id="tNome" required aria-required="true" maxlength="80" autocomplete="name" placeholder="Como podemos te chamar?">
+    <label class="label" for="tEmail">E-mail</label><input id="tEmail" required aria-required="true" type="email" inputmode="email" maxlength="120" autocomplete="email" placeholder="seu@email.com">
     <small class="a-dica">Use o mesmo e-mail com que vai entrar no app (ou a conta Google).</small>
-    <label class="label" for="tZap">WhatsApp <small style="font-weight:400">(opcional, para avisarmos quando liberar)</small></label><input id="tZap" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="(11) 99999-9999">
+    <label class="label" for="tZap">WhatsApp <small style="font-weight:400">(para avisarmos quando liberar)</small></label><input id="tZap" required aria-required="true" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="(11) 99999-9999">
     <fieldset class="a-novo"><legend class="label">Como você quer usar?</legend>
       <label class="a-tipo"><input type="radio" name="tTipo" value="pessoal"><span><b>Só eu</b><small>Minhas contas pessoais.</small></span></label>
       <label class="a-tipo"><input type="radio" name="tTipo" value="casa" checked><span><b>Eu e mais alguém</b><small>Contas da casa, com parceiro(a).</small></span></label>
-      <div id="tParcBox"><label class="label" for="tParc">E-mail de quem vai testar com você <small style="font-weight:400">(opcional)</small></label><input id="tParc" type="email" inputmode="email" maxlength="120" autocomplete="off" placeholder="email@dele(a).com"></div>
+      <div id="tParcBox"><label class="label" for="tParc">E-mail de quem vai testar com você</label><input id="tParc" type="email" inputmode="email" maxlength="120" autocomplete="off" placeholder="email@dele(a).com"></div>
     </fieldset>
-    <label class="label" for="tMotivo">Como você controla seu dinheiro hoje? <small style="font-weight:400">(opcional)</small></label><textarea id="tMotivo" maxlength="500" rows="2" placeholder="Ex.: planilha, caderno, app do banco, de cabeça…"></textarea>
+    <label class="label" for="tMotivo">Como você controla seu dinheiro hoje?</label><textarea id="tMotivo" required aria-required="true" maxlength="500" rows="2" placeholder="Ex.: planilha, caderno, app do banco, de cabeça…"></textarea>
     <p class="a-msg" id="tMsg" role="status"></p>
     <button class="btn" type="submit" id="tEnviar">Pedir para testar</button>
     <button class="today-link" type="button" id="tVoltar">← Voltar para o login</button>
@@ -1838,13 +1838,14 @@ $("tForm").onsubmit=async e=>{
   const ok=x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x);
   if(nome.length<2){ msg.textContent="Escreva seu nome."; msg.classList.add("err"); return; }
   if(!ok(email)){ msg.textContent="Confira o e-mail."; msg.classList.add("err"); return; }
-  if(zap && !/^\d{10,11}$/.test(zap)){ msg.textContent="Confira o WhatsApp, com DDD. Ex.: (11) 99999-9999"; msg.classList.add("err"); return; }
-  if(tipo==="casa" && parc && (!ok(parc)||parc===email)){ msg.textContent="Confira o e-mail de quem vai testar com você."; msg.classList.add("err"); return; }
+  if(!/^\d{10,11}$/.test(zap)){ msg.textContent="Informe seu WhatsApp com DDD. Ex.: (11) 99999-9999"; msg.classList.add("err"); $("tZap").focus(); return; }
+  if(tipo==="casa" && (!ok(parc)||parc===email)){ msg.textContent=parc?"Confira o e-mail de quem vai testar com você.":"Informe o e-mail de quem vai testar com você, ou escolha “Só eu”."; msg.classList.add("err"); $("tParc").focus(); return; }
+  if(motivo.length<2){ msg.textContent="Conte como você controla seu dinheiro hoje. Pode ser curto: planilha, caderno, de cabeça…"; msg.classList.add("err"); $("tMotivo").focus(); return; }
   $("tEnviar").disabled=true;
-  const r=await sb.from("testadores").insert({nome,email,whatsapp:zap?"55"+zap:null,tipo,parceiro_email:tipo==="casa"&&parc?parc:null,motivo:motivo||null});
+  const r=await sb.from("testadores").insert({nome,email,whatsapp:"55"+zap,tipo,parceiro_email:tipo==="casa"?parc:null,motivo});
   $("tEnviar").disabled=false;
   if(r.error){ msg.textContent=/duplicate|unique/i.test(r.error.message)?"Esse e-mail já pediu para testar. Assim que o administrador liberar, você recebe um aviso.":"Não consegui enviar agora. Tente de novo em instantes."; msg.classList.add(/duplicate|unique/i.test(r.error.message)?"ok":"err"); return; }
-  $("tForm").innerHTML=`<h2 class="t-tit">Pedido recebido! 🎉</h2><p>Valeu, ${esc(nome.split(" ")[0])}! Assim que o administrador liberar, você recebe um aviso${zap?" no WhatsApp":" por e-mail"}.</p><p>Depois é só voltar aqui e tocar em <b>Primeiro acesso: criar senha</b> com o e-mail <b>${esc(email)}</b>, ou entrar com o Google usando esse e-mail.</p><button class="btn ghost" type="button" onclick="location.reload()">Voltar para o login</button>`;
+  $("tForm").innerHTML=`<h2 class="t-tit">Pedido recebido! 🎉</h2><p>Valeu, ${esc(nome.split(" ")[0])}! Assim que o administrador liberar, você recebe um aviso no WhatsApp.</p><p>Depois é só voltar aqui e tocar em <b>Primeiro acesso: criar senha</b> com o e-mail <b>${esc(email)}</b>, ou entrar com o Google usando esse e-mail.</p><button class="btn ghost" type="button" onclick="location.reload()">Voltar para o login</button>`;
 };
 
 /* ---------- opinião (feedback) ---------- */
