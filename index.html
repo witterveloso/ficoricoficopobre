@@ -293,6 +293,7 @@ h1,h2,h3,.month strong,.listhead h2,.ent-head h2,.form h3,.empty strong{font-fam
 #fbForm textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;resize:vertical;margin-top:4px}
 .casal-list.adm .acoes a.btn{text-decoration:none}
 .rm.del{color:var(--bad)} .rm.del.confirma{background:var(--bad);color:#fff;border-color:var(--bad)}
+.membros{display:flex;flex-direction:column;gap:6px;margin:8px 0} .membro{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;background:var(--sunk);border-radius:10px;padding:8px 10px;font-weight:700;font-size:14px} .membro small{font-weight:400;color:var(--muted)} .membro .rm{margin-left:auto} .membro.vazio{font-weight:400;color:var(--muted)}
 .adm-novo{display:flex;flex-direction:column;gap:8px;background:var(--sunk);border-radius:16px;padding:14px;margin-bottom:12px}
 .adm-novo>small{color:var(--muted);font-size:12.5px;line-height:1.4}
 .adm-novo-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
@@ -1905,8 +1906,27 @@ function desenharAdmin(){
   } else if(adm.tab==="todos"){
     box.innerHTML=`<ul class="casal-list adm">${P.map(p=>linha(p, p.user_id===meuPerfil.user_id?'<small class="quem">Você é o administrador</small>':`${p.status==="bloqueado"?'<button type="button" class="rm ok" data-a="desbloquear">Desbloquear</button>':'<button type="button" class="rm" data-a="bloquear">Bloquear acesso</button>'}${p.papel==="admin"?"":'<button type="button" class="rm del" data-a="excluir">Excluir usuário</button>'}<span class="junto"><select data-sel>${'<option value="">Mudar de casa…</option>'+opcoesCasa(p.casa_id)}</select><button type="button" class="rm ok" data-a="mover">Mover</button></span><input class="nm" data-nome value="${esc(p.nome||"")}" placeholder="Nome" maxlength="40"><button type="button" class="rm ok" data-a="nome">Salvar nome</button>`)).join("")}</ul>`;
   } else {
-    box.innerHTML=`<ul class="casal-list adm">${adm.casas.map(c=>{ const ms=P.filter(p=>p.casa_id===c.id);
-      return `<li data-casa="${c.id}"><span class="ini"><i class="a">${esc((c.nome||"?").charAt(0).toUpperCase())}</i></span><div><b>${esc(c.nome)} <span class="pill ${c.tipo==="pessoal"?"warn":"ok"}">${c.tipo==="pessoal"?"pessoal":"casa"}</span></b><small>${ms.length?ms.map(m=>esc(m.email)+(m.status!=="aprovado"?` (${m.status})`:"")).join(", "):"sem pessoas"} · criada em ${fmtData(c.criado_em)}</small><div class="acoes"><input class="nm" data-cnome value="${esc(c.nome)}" maxlength="60"><button type="button" class="rm ok" data-a="renomear">Renomear</button>${ms.length?"":`<button type="button" class="rm" data-a="apagarcasa">Apagar casa</button>`}</div></div></li>`; }).join("")}</ul><p class="casal-sub">Por privacidade, o administrador gerencia acessos e casas, mas não vê as contas nem os valores de ninguém.</p>`;
+    const ap=P.filter(p=>p.status==="aprovado"&&p.papel!=="admin"), nm=p=>esc(p.nome||p.email.split("@")[0]);
+    const optP=`<option value="">Escolha…</option>`+ap.map(p=>`<option value="${p.user_id}">${nm(p)} (${esc(p.email)})${p.casa_id?` · ${esc(nomeCasa(p.casa_id))}`:""}</option>`).join("");
+    const montar=`<form class="adm-novo" id="admCasal" novalidate><b>Juntar duas pessoas na mesma casa</b><small>Use para formar um casal ou dividir as contas. Cada casa tem no máximo 2 pessoas.</small>
+      <div class="adm-novo-g"><label>Pessoa 1<select id="acA">${optP}</select></label><label>Pessoa 2<select id="acB">${optP}</select></label>
+      <label>Qual casa usar?<select id="acOnde"><option value="a">A casa da pessoa 1 (mantém os lançamentos dela)</option><option value="b">A casa da pessoa 2 (mantém os lançamentos dela)</option><option value="nova">Uma casa nova, vazia</option></select></label></div>
+      <button class="btn" type="submit">Juntar na mesma casa</button></form>`;
+    box.innerHTML=montar+`<ul class="casal-list adm">${adm.casas.map(c=>{ const ms=P.filter(p=>p.casa_id===c.id), lim=c.tipo==="pessoal"?1:2;
+      const fora=ap.filter(p=>p.casa_id!==c.id);
+      return `<li data-casa="${c.id}"><span class="ini"><i class="a">${esc((c.nome||"?").charAt(0).toUpperCase())}</i></span><div><b>${esc(c.nome)} <span class="pill ${c.tipo==="pessoal"?"warn":"ok"}">${c.tipo==="pessoal"?"pessoal":"casa"}</span> <span class="pill">${ms.length}/${lim}</span></b><small>criada em ${fmtData(c.criado_em)}</small>
+        <div class="membros">${ms.length?ms.map(m=>`<span class="membro">${nm(m)} <small>${esc(m.email)}${m.status!=="aprovado"?` · ${m.status}`:""}</small>${m.papel==="admin"?"":`<button type="button" class="rm" data-a="tirar" data-membro="${m.user_id}">Tirar da casa</button>`}</span>`).join(""):'<span class="membro vazio">Sem pessoas</span>'}</div>
+        <div class="acoes"><input class="nm" data-cnome value="${esc(c.nome)}" maxlength="60"><button type="button" class="rm ok" data-a="renomear">Renomear</button>
+        <span class="junto"><select data-ctipo><option value="casa" ${c.tipo!=="pessoal"?"selected":""}>Casa (até 2 pessoas)</option><option value="pessoal" ${c.tipo==="pessoal"?"selected":""}>Pessoal (1 pessoa)</option></select><button type="button" class="rm ok" data-a="tipo">Mudar tipo</button></span>
+        ${ms.length<lim&&fora.length?`<span class="junto"><select data-cadd><option value="">Adicionar pessoa…</option>${fora.map(p=>`<option value="${p.user_id}">${nm(p)}${p.casa_id?` (sai de ${esc(nomeCasa(p.casa_id))})`:""}</option>`).join("")}</select><button type="button" class="rm ok" data-a="adicionar">Adicionar</button></span>`:""}
+        ${ms.length?"":`<button type="button" class="rm" data-a="apagarcasa">Apagar casa</button>`}</div></div></li>`; }).join("")}</ul><p class="casal-sub">Ao tirar alguém de uma casa, a pessoa ganha uma conta pessoal nova e vazia; os lançamentos ficam na casa de onde ela saiu. Uma casa que fica sem ninguém pode ser apagada aqui. Por privacidade, o administrador não vê as contas nem os valores de ninguém.</p>`;
+    $("admCasal").onsubmit=async e=>{ e.preventDefault(); const A=$("acA").value, B=$("acB").value, onde=$("acOnde").value;
+      if(!A||!B) return toast("Escolha as duas pessoas."); if(A===B) return toast("Escolha duas pessoas diferentes.");
+      const pa=P.find(p=>p.user_id===A), pb=P.find(p=>p.user_id===B); let r, casa;
+      if(onde==="nova"){ const c=await sb.from("casas").insert({nome:`Casa de ${(pa.nome||pa.email.split("@")[0]).split(" ")[0]} e ${(pb.nome||pb.email.split("@")[0]).split(" ")[0]}`,tipo:"casa"}).select("id").single(); if(c.error) return toast("Não consegui criar a casa."); casa=c.data.id; }
+      else { const dono=onde==="a"?pa:pb; casa=dono.casa_id; if(!casa) return toast("Essa pessoa ainda não tem casa."); const outros=P.filter(p=>p.casa_id===casa&&p.user_id!==A&&p.user_id!==B); if(outros.length) return toast("Essa casa já tem outra pessoa. Tire-a antes."); r=await sb.from("casas").update({tipo:"casa"}).eq("id",casa); if(r.error) return toast("Não consegui mudar o tipo da casa."); }
+      for(const u of [A,B]){ if(P.find(p=>p.user_id===u).casa_id===casa) continue; r=await sb.from("perfis").update({casa_id:casa,tipo_conta:"casa"}).eq("user_id",u); if(r.error) return toast(/duas pessoas/.test(r.error.message)?"Essa casa já tem duas pessoas.":"Não consegui mover a pessoa."); }
+      toast("Pronto: as duas pessoas agora dividem a mesma casa."); carregarAdmin(); };
   }
 }
 async function admAcao(b){
@@ -1927,6 +1947,11 @@ async function admAcao(b){
   } else if(li && li.dataset.casa){
     const id=li.dataset.casa;
     if(a==="renomear"){ const n=li.querySelector("[data-cnome]").value.trim(); if(!n) return toast("Escreva o nome da casa."); r=await sb.from("casas").update({nome:n}).eq("id",id); }
+    if(a==="tipo"){ const t=li.querySelector("[data-ctipo]").value; if(t==="pessoal" && adm.perfis.filter(p=>p.casa_id===id).length>1) return toast("Conta pessoal é só para uma pessoa. Tire alguém da casa antes."); r=await sb.from("casas").update({tipo:t}).eq("id",id); }
+    if(a==="adicionar"){ const u=li.querySelector("[data-cadd]").value; if(!u) return toast("Escolha a pessoa."); r=await sb.from("perfis").update({casa_id:id}).eq("user_id",u); }
+    if(a==="tirar"){ const u=b.dataset.membro, pm=adm.perfis.find(p=>p.user_id===u); if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar"; return; }
+      const c=await sb.from("casas").insert({nome:"Contas de "+(pm.nome||pm.email.split("@")[0]).split(" ")[0],tipo:"pessoal"}).select("id").single();
+      r = c.error ? c : await sb.from("perfis").update({casa_id:c.data.id,tipo_conta:"pessoal"}).eq("user_id",u); }
     if(a==="apagarcasa"){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar: apaga tudo desta casa"; return; } r=await sb.from("casas").delete().eq("id",id); }
   }
   if(r && r.error){ toast(/própria conta/.test(r.error.message)?"Você não pode excluir a própria conta.":/administrador/.test(r.error.message)&&a==="excluir"?"Não é possível excluir um administrador.":/duas pessoas/.test(r.error.message)?"Essa casa já tem duas pessoas.":/pessoal/.test(r.error.message)?"Conta pessoal é só para uma pessoa.":"Não consegui salvar. Tente de novo."); return; }
