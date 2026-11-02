@@ -327,6 +327,20 @@ h1,h2,h3,.month strong,.listhead h2,.ent-head h2,.form h3,.empty strong{font-fam
 .nbtn span[aria-hidden]{font-size:20px;line-height:1} .nbtn .ct{display:block!important}
 .nbtn .ini{display:flex} .nbtn .ini i{width:24px;height:24px;font-size:11px}
 @media (max-width:460px){.sairbtn2 .ct{display:none}.sairbtn2{padding:9px 11px}.topnav{gap:6px}.nbtn{font-size:11px;min-height:54px}.top .brand .logo{width:110px}}
+/* tutorial */
+.tour{position:fixed;inset:0;z-index:2000}
+.tour-luz{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px rgba(17,24,39,.62);outline:3px solid #F5B70A;transition:all .3s ease;pointer-events:none}
+.tour-card{position:fixed;width:min(360px,calc(100vw - 24px));background:var(--surface);border-radius:20px;padding:18px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.35);transition:top .3s ease,left .3s ease}
+.tour-card.centro{top:50%!important;left:50%!important;transform:translate(-50%,-50%)}
+.tour-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tour-n{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tour-pular{all:unset;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);text-decoration:underline;padding:4px}
+.tour-card h3{margin:0 0 6px;font-family:var(--f-display);font-size:20px;line-height:1.2}
+.tour-card p{margin:0 0 12px;font-size:14.5px;line-height:1.5;color:#374151}
+.tour-dots{display:flex;gap:5px;margin-bottom:12px} .tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)} .tour-dots i.on{background:var(--rico);width:18px;border-radius:4px}
+.tour-acoes{display:flex;gap:8px;justify-content:space-between} .tour-acoes .btn{flex:1}
+body.tour-on{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.tour-luz,.tour-card{transition:none}}
 /* rodapé */
 .rodape{order:10000;grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:12px;padding:18px 0 4px;border-top:1px solid var(--line);text-align:center}
 .rod-acoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -819,7 +833,7 @@ a.casal-btn{text-decoration:none;color:inherit}
 
   <footer class="rodape" id="rodape">
     <p class="rod-aviso" id="modeNote" hidden></p>
-    <div class="rod-acoes"><button type="button" class="rod-btn" id="fbBtn"><span aria-hidden="true">💬</span> Dar opinião</button><button type="button" class="rod-btn" id="supBtn"><span aria-hidden="true">🛟</span> Suporte</button></div>
+    <div class="rod-acoes"><button type="button" class="rod-btn" id="tourBtn"><span aria-hidden="true">🧭</span> Como usar o app</button><button type="button" class="rod-btn" id="fbBtn"><span aria-hidden="true">💬</span> Dar opinião</button><button type="button" class="rod-btn" id="supBtn"><span aria-hidden="true">🛟</span> Suporte</button></div>
     <p class="rod-links"><a href="privacidade.html">Política de privacidade</a> · <a href="termos.html">Termos de uso</a></p>
     <p class="rod-ass">Desenvolvido por Witter Veloso - Soluções com Inteligência Artificial</p>
   </footer>
@@ -1921,6 +1935,46 @@ $("tForm").onsubmit=async e=>{
   $("tForm").innerHTML=`<h2 class="t-tit">Pedido recebido! 🎉</h2><p>Valeu, ${esc(nome.split(" ")[0])}! Assim que o administrador liberar, você recebe um aviso no WhatsApp.</p><p>Na mensagem vem um link: é só abrir e tocar em <b>Criar minha senha</b> com o e-mail <b>${esc(email)}</b>, ou entrar com o Google usando esse e-mail.</p><button class="btn ghost" type="button" onclick="location.reload()">Voltar para o login</button>`;
 };
 
+/* ---------- tutorial de primeiro acesso ---------- */
+const TOUR=[
+  [null,"Bem-vindo ao Fico Rico Fico Pobre! 🐷","Em um minutinho você aprende a usar o app. Pode pular quando quiser: o tutorial fica no rodapé para consultar depois."],
+  ["#saldoCard","Seu saldo do mês","Mostra quanto sobra: o que já entrou menos o que saiu. Verde, você tá rico. Amarelo, sobram 20% da renda ou menos. Vermelho, saiu mais do que entrou."],
+  [".topsum .ts.in","Já entrou no mês","Só conta a renda que já caiu na conta. O que ainda vai entrar aparece como “a receber”, sem inflar o saldo."],
+  [".topsum .ts.out","Gastos do mês","Soma as contas do mês e os gastos do dia a dia. Embaixo você vê quanto foi de cada um."],
+  [".topsum .ts.late","Contas atrasadas","Ficam aqui só como lembrete e não mexem no saldo do mês. Toque no quadro para ver a lista."],
+  ["#lancarBtn","Lançar um gasto","Toque aqui e escolha: <b>Gasto do dia</b> (pão, mercado, combustível, já pago hoje) ou <b>Conta do mês</b> (aluguel, luz, internet, com vencimento). No valor, digite só os números."],
+  [".a-list","Contas do mês","Toque no ✓ quando pagar e no ✕ se não foi paga. Toque no nome da conta para editar ou excluir."],
+  [".a-gastos","Gastos do dia a dia","Os mais recentes aparecem primeiro. Se quiser, guarde o lugar da compra com “Onde estou”."],
+  [".a-ent","Entradas","Cadastre seu salário e outras rendas com o dia em que caem na conta. O app só conta a partir desse dia."],
+  [".month","Trocar de mês","Use as setas para ver meses anteriores ou planejar os próximos."],
+  [".topnav","Menu do app","<b>Casal</b>: convide quem divide as contas com você. <b>Dicas</b>: aprenda a poupar e crie metas. <b>Gráficos</b>: veja para onde vai o dinheiro. <b>Personalizar</b>: categorias e campos do seu jeito."],
+  ["#rodape","Ajuda sempre à mão","Aqui embaixo ficam este tutorial, o botão para dar sua opinião e o suporte. Pronto, agora é com você! 💚"]
+];
+let tourI=0, tourUid=null;
+function tourVisivel(sel){ if(!sel) return true; const el=document.querySelector(sel); if(!el) return false; const r=el.getBoundingClientRect(); return !!(el.offsetParent||el.getClientRects().length) && r.width>0 && r.height>0; }
+function iniciarTour(uid){ tourUid=uid||tourUid; tourI=0; if(!$("tourBox")){ document.body.insertAdjacentHTML("beforeend",`<div id="tourBox" class="tour" hidden><div class="tour-luz" id="tourLuz"></div><div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTit"><div class="tour-top"><span class="tour-n" id="tourN"></span><button type="button" class="tour-pular" id="tourPular">Pular tutorial</button></div><h3 id="tourTit"></h3><p id="tourTxt"></p><div class="tour-dots" id="tourDots" aria-hidden="true"></div><div class="tour-acoes"><button type="button" class="btn ghost" id="tourVoltar">Voltar</button><button type="button" class="btn" id="tourProx">Próximo</button></div></div></div>`);
+    $("tourPular").onclick=()=>fecharTour(); $("tourVoltar").onclick=()=>passoTour(-1); $("tourProx").onclick=()=>passoTour(1);
+    addEventListener("resize",()=>{ if(!$("tourBox").hidden) mostrarPasso(); }); addEventListener("keydown",e=>{ if($("tourBox").hidden) return; if(e.key==="Escape") fecharTour(); if(e.key==="ArrowRight") passoTour(1); if(e.key==="ArrowLeft") passoTour(-1); }); }
+  $("tourBox").hidden=false; document.body.classList.add("tour-on"); mostrarPasso(); }
+function passoTour(d){ let i=tourI+d; while(i>=0 && i<TOUR.length && !tourVisivel(TOUR[i][0])) i+=d; if(i>=TOUR.length) return fecharTour(); if(i<0) return; tourI=i; mostrarPasso(); }
+function mostrarPasso(){
+  const [sel,tit,txt]=TOUR[tourI], vis=TOUR.map((t,i)=>i).filter(i=>tourVisivel(TOUR[i][0])), pos=vis.indexOf(tourI)+1;
+  $("tourTit").innerHTML=tit; $("tourTxt").innerHTML=txt; $("tourN").textContent=`${pos} de ${vis.length}`;
+  $("tourDots").innerHTML=vis.map(i=>`<i class="${i===tourI?"on":""}"></i>`).join("");
+  $("tourVoltar").style.visibility=pos>1?"visible":"hidden"; $("tourProx").textContent=pos===vis.length?"Começar a usar":"Próximo";
+  const luz=$("tourLuz"), card=$("tourCard"), el=sel&&document.querySelector(sel);
+  if(!el){ luz.style.cssText="top:50%;left:50%;width:0;height:0"; card.className="tour-card centro"; card.style.top=card.style.left=""; return; }
+  el.scrollIntoView({block:"center"});
+  requestAnimationFrame(()=>{ const r=el.getBoundingClientRect(), pad=8, vw=innerWidth, vh=innerHeight;
+    luz.style.cssText=`top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px`;
+    card.className="tour-card"; const ch=card.offsetHeight, cw=card.offsetWidth;
+    let top = r.bottom+pad+12+ch < vh ? r.bottom+pad+12 : (r.top-pad-12-ch > 0 ? r.top-pad-12-ch : vh-ch-12);
+    let left = Math.min(Math.max(12, r.left+r.width/2-cw/2), vw-cw-12);
+    card.style.top=top+"px"; card.style.left=left+"px"; $("tourProx").focus({preventScroll:true}); });
+}
+function fecharTour(){ $("tourBox").hidden=true; document.body.classList.remove("tour-on"); try{ if(tourUid) localStorage.setItem("frfp-tour-v1-"+tourUid,"1"); }catch(e){} scrollTo({top:0,behavior:"smooth"}); }
+$("tourBtn").onclick=()=>iniciarTour(meuPerfil&&meuPerfil.user_id);
+
 /* ---------- suporte ---------- */
 const SUPORTE_EMAIL="witterveloso@gmail.com";
 $("supBtn").onclick=()=>{ $("supPanel").hidden=false; $("supAviso").textContent="";
@@ -1997,6 +2051,7 @@ async function entrarNoApp(session){
     const checar=async()=>{ if(Date.now()-ult>LIM){ try{ await sb.auth.signOut(); }catch(e){} try{ sessionStorage.setItem("frfp-saiu","1"); }catch(e){} location.reload(); } };
     setInterval(checar,60*1000); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) checar(); }); })();
   try{ await carregarCasa(); }catch(e){ console.error(e); }
+  setTimeout(()=>{ try{ if(!localStorage.getItem("frfp-tour-v1-"+session.user.id)) iniciarTour(session.user.id); }catch(e){} },1200);
   sb.channel("casa-config").on("postgres_changes",{event:"*",schema:"public",table:"casas"},()=>carregarCasa().catch(console.error))
     .on("postgres_changes",{event:"*",schema:"public",table:"perfis"},()=>carregarCasa().catch(console.error))
     .on("postgres_changes",{event:"*",schema:"public",table:"convites"},()=>carregarCasa().catch(console.error)).subscribe();
