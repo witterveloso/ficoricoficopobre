@@ -970,7 +970,7 @@ function renderFormNovo(host, sit, k){
   const atual=()=>(host.querySelector('input[name="fSit"]:checked')||{}).value||"gasto";
   const dica=()=>{ const s_=atual(), hoje=iso(now), d=$("fData").value;
     $("fSitDica").textContent = s_==="gasto" ? `Entra em Gastos do dia a dia com a data de hoje (${now.toLocaleDateString("pt-BR")}), já como pago. Não precisa marcar nada depois.`
-      : !d ? "" : d<hoje ? "Essa data já passou: a conta entra como vencida, em atraso, até você marcar como paga." : d===hoje ? "Vence hoje: entra em Contas do mês para você marcar quando pagar." : "Entra em Contas do mês como a vencer, e o app avisa quando estiver perto do vencimento."; };
+      : !d ? "" : d<hoje ? ($("fTipo").value==="mensal" ? "Atenção: data passada com “Todo mês” cria esta conta atrasada e também as dos próximos meses, que entram no saldo. Para lançar só a conta atrasada, escolha “Só desta vez”." : "Essa data já passou: a conta entra como atrasada, só como lembrete, e não mexe no saldo do mês.") : d===hoje ? "Vence hoje: entra em Contas do mês para você marcar quando pagar." : "Entra em Contas do mês como a vencer, e o app avisa quando estiver perto do vencimento."; };
   const ajustar=(trocou)=>{ const s_=atual();
     $("fDataBox").hidden = s_==="gasto"; $("fRepBox").hidden = s_==="gasto"; $("fAtalhos").hidden = s_!=="gasto"; $("fLocalBox").hidden = s_!=="gasto";
     $("fSalvar").textContent = s_==="gasto" ? "Lançar gasto do dia" : "Lançar conta do mês";
@@ -979,7 +979,9 @@ function renderFormNovo(host, sit, k){
     if(trocou) $("fCat").value=catPad(s_);
     dica(); };
   host.querySelectorAll('input[name="fSit"]').forEach(r=>r.onchange=()=>ajustar(true));
-  $("fData").addEventListener("input",dica);
+  let tipoMexido=false;
+  $("fTipo").addEventListener("change",()=>{ tipoMexido=true; dica(); });
+  $("fData").addEventListener("input",()=>{ if(!tipoMexido && $("fData").value) $("fTipo").value = $("fData").value<iso(now) ? "unica" : "mensal"; dica(); });
   host.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{ $("fNome").value=b.dataset.at; $("fCat").value=b.dataset.cat; host.querySelectorAll("[data-at]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("fValor").focus(); });
   ligarLocal(); ajustar(false); $("fNome").focus();
   $("fCancel").onclick=()=>{ editing=null; render(); };
