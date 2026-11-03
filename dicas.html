@@ -286,7 +286,7 @@ let contas=[], entradas=[], metas=[], M=null;
 
 /* ---------- diagnóstico ---------- */
 function dadosMes(m){
-  const C=contas.filter(c=>visivel(c,m) && !atrasada(c,m)), Etodas=entradas.filter(e=>visivel(e,m)), E=Etodas.filter(e=>recebida(e,m)), aReceber=Etodas.filter(e=>!recebida(e,m)).reduce((s,e)=>s+valorNo(e,m),0);
+  const C=contas.filter(c=>visivel(c,m) && (c.natureza==="gasto" || !!(c.pagos&&c.pagos[m]))), Etodas=entradas.filter(e=>visivel(e,m)), E=Etodas.filter(e=>recebida(e,m)), aReceber=Etodas.filter(e=>!recebida(e,m)).reduce((s,e)=>s+valorNo(e,m),0);
   const ent=E.reduce((s,e)=>s+valorNo(e,m),0);
   const gastos=C.filter(c=>c.natureza==="gasto").reduce((s,c)=>s+valorNo(c,m),0);
   const fixas=C.filter(c=>c.natureza!=="gasto").reduce((s,c)=>s+valorNo(c,m),0);

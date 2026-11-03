@@ -197,7 +197,7 @@ const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).tri
 
 /* ---------- dados ---------- */
 function dadosMes(m){
-  const C=contas.filter(c=>visivel(c,m) && !atrasada(c,m)), Etodas=entradas.filter(e=>visivel(e,m)), E=Etodas.filter(e=>recebida(e,m)), aReceber=Etodas.filter(e=>!recebida(e,m)).reduce((s,e)=>s+valorNo(e,m),0);
+  const C=contas.filter(c=>visivel(c,m) && (c.natureza==="gasto" || !!(c.pagos&&c.pagos[m]))), Etodas=entradas.filter(e=>visivel(e,m)), E=Etodas.filter(e=>recebida(e,m)), aReceber=Etodas.filter(e=>!recebida(e,m)).reduce((s,e)=>s+valorNo(e,m),0);
   const ent=E.reduce((s,e)=>s+valorNo(e,m),0);
   const g=C.filter(c=>c.natureza==="gasto"), f=C.filter(c=>c.natureza!=="gasto");
   const gastos=g.reduce((s,c)=>s+valorNo(c,m),0), fixas=f.reduce((s,c)=>s+valorNo(c,m),0);

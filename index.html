@@ -912,7 +912,8 @@ function visivel(c,k){
 function valorNo(c,k){ return (c.valores && c.valores[k]!=null) ? Number(c.valores[k]) : Number(c.valor||0); }
 function pago(c,k){ return !!(c.pagos && c.pagos[k]); }
 function naoPaga(c,k){ return !!(c.naoPagas && c.naoPagas[k]); }
-function noSaldo(c,k){ return ehGasto(c) || pago(c,k) || !status(c,k).late; }
+/* conta do mês só sai do saldo quando é marcada como paga; gasto do dia já nasce pago */
+function noSaldo(c,k){ return ehGasto(c) || pago(c,k); }
 function recebida(e,k){ if(k<TODAY_YM) return true; if(k>TODAY_YM) return false; return diaNo(e,k)<=now.getDate(); }
 function aReceberMes(k){ const L=entradas.filter(e=>visivel(e,k)&&!recebida(e,k)).sort((a,b)=>diaNo(a,k)-diaNo(b,k)); return {v:L.reduce((s,e)=>s+valorNo(e,k),0),n:L.length,prox:L[0]?diaNo(L[0],k):null,ult:L.length?diaNo(L[L.length-1],k):null}; }
 function diaNo(c,k){ const [y,m]=k.split("-").map(Number); return Math.min(Number(c.dia)||1, daysIn(y,m-1)); }
@@ -996,7 +997,8 @@ function render(){
   $("empty").hidden = soContas.length>0;
   { const ab=soContas.filter(c=>!pago(c,k)); desenharToggle("contas",soContas.length, ab.length?`${ab.length} a pagar`:"todas pagas");
     const tc=soContas.reduce((a,c)=>a+valorNo(c,k),0); $("cTotal").textContent=fmt(tc); $("cQtd").textContent=soContas.length?`${soContas.length} ${soContas.length===1?"conta":"contas"} · ${fmt(ab.reduce((a,c)=>a+valorNo(c,k),0))} a pagar`:"";
-    const tg=doMes.filter(ehGasto).reduce((a,c)=>a+valorNo(c,k),0), tcS=totalSaldo-tg; $("topGasN").textContent = total ? `Contas ${fmt(tcS)} · Dia a dia ${fmt(tg)}${foraSaldo>0?` · ${fmt(foraSaldo)} em atraso fica fora do saldo`:""}` : ""; }
+    const tg=doMes.filter(ehGasto).reduce((a,c)=>a+valorNo(c,k),0), tcS=totalSaldo-tg; const aPagarV=doMes.filter(c=>!ehGasto(c)&&!pago(c,k)&&!status(c,k).late).reduce((a,c)=>a+valorNo(c,k),0);
+    $("topGasN").textContent = total ? `Contas pagas ${fmt(tcS)} · Dia a dia ${fmt(tg)}${aPagarV>0?` · ${fmt(aPagarV)} a pagar (sai do saldo quando você marcar ✓)`:""}${foraSaldo>0?` · ${fmt(foraSaldo)} em atraso`:""}` : ""; }
   if(!soContas.length) $("list").innerHTML="";
   else if(!list.length) $("list").innerHTML = `<li class="note" style="padding:12px">Nenhuma conta neste filtro.</li>`;
   $("exbanner").hidden = !contas.some(c=>c.exemplo);
@@ -1504,7 +1506,8 @@ function renderEntradas(k, ents, eFixa, eCnpj, total, ar){
   $("semAv").src = nivel==="falso" ? AV_FALSO : (nivel==="red"||nivel==="yellow") ? AV_POBRE : AV_RICO;
   const sc=$("saldoCard"); sc.className="saldo "+(nivel||"none");
   $("sdVal").textContent = (sobra<0?"- ":"")+fmt(Math.abs(sobra));
-  $("sdSub").textContent = nivel==="falso" ? `Contas atrasadas: ${fmt(atrV)} · ${depois>=0?`Pagando todas, ainda sobram ${fmt(depois)}`:`Pagando todas, faltariam ${fmt(-depois)}`}` : nivel ? `Já entrou ${fmt(ent)} · Saídas ${fmt(total)}${ar&&ar.v>0?` · ainda entram ${fmt(ar.v)} (com elas: ${sobra+ar.v<0?"- ":""}${fmt(Math.abs(sobra+ar.v))})`:""}` : "Cadastre entradas e contas";
+  const aPagarMes = contas.filter(c=>visivel(c,k)&&!ehGasto(c)&&!pago(c,k)&&!status(c,k).late).reduce((a,c)=>a+valorNo(c,k),0);
+  $("sdSub").textContent = (nivel==="green"||nivel==="yellow") && aPagarMes>0 ? `Já entrou ${fmt(ent)} · Pago ${fmt(total)} · Ainda a pagar ${fmt(aPagarMes)} (depois de pagar: ${sobra-aPagarMes<0?"- ":""}${fmt(Math.abs(sobra-aPagarMes))})` : nivel==="falso" ? `Contas atrasadas: ${fmt(atrV)} · ${depois>=0?`Pagando todas, ainda sobram ${fmt(depois)}`:`Pagando todas, faltariam ${fmt(-depois)}`}` : nivel ? `Já entrou ${fmt(ent)} · Saídas ${fmt(total)}${ar&&ar.v>0?` · ainda entram ${fmt(ar.v)} (com elas: ${sobra+ar.v<0?"- ":""}${fmt(Math.abs(sobra+ar.v))})`:""}` : "Cadastre entradas e contas";
   const FR={
     green:[`Tá rico! 👑 Ainda sobram ${pctSobra}% da sua renda.`,`Fico rico! 🐷👑 O porquinho agradece: sobram ${pctSobra}% da renda.`,`Pode sorrir: ${pctSobra}% da renda ainda está no bolso. 😎`,`Milionário? Ainda não. Mas sobram ${pctSobra}% da renda. 💰`],
     yellow:[`Fica esperto! Só sobram ${pctSobra}% da sua renda.`,`Pé no freio! 🚦 Só sobram ${pctSobra}% da renda.`,`O porquinho está suando 😅 Só sobram ${pctSobra}% da renda.`,`Hora de economizar: só restam ${pctSobra}% da renda do mês.`],
@@ -2008,12 +2011,12 @@ $("tForm").onsubmit=async e=>{
 /* ---------- tutorial de primeiro acesso ---------- */
 const TOUR=[
   [null,"Bem-vindo ao Fico Rico Fico Pobre! 🐷","Em um minutinho você aprende a usar o app. Pode pular quando quiser: o tutorial fica no rodapé para consultar depois."],
-  ["#saldoCard","Seu saldo do mês","Mostra quanto sobra: o que já entrou menos o que saiu. Verde, você tá rico. Amarelo, sobram 20% da renda ou menos. Vermelho, saiu mais do que entrou. Roxo, <b>falso rico</b>: sobra dinheiro, mas tem conta atrasada esperando."],
+  ["#saldoCard","Seu saldo do mês","Mostra quanto sobra: o que já entrou menos o que você <b>já pagou</b>. Verde, você tá rico. Amarelo, sobram 20% da renda ou menos. Vermelho, saiu mais do que entrou. Roxo, <b>falso rico</b>: sobra dinheiro, mas tem conta atrasada esperando."],
   [".topsum .ts.in","Já entrou no mês","Só conta a renda que já caiu na conta. O que ainda vai entrar aparece como “a receber”, sem inflar o saldo."],
-  [".topsum .ts.out","Gastos do mês","Soma as contas do mês e os gastos do dia a dia. Embaixo você vê quanto foi de cada um."],
+  [".topsum .ts.out","Gastos do mês","Soma as contas que você já marcou como pagas e os gastos do dia a dia. Embaixo aparece quanto ainda falta pagar."],
   [".topsum .ts.late","Contas atrasadas","Ficam aqui só como lembrete e não mexem no saldo do mês. Toque no quadro para ver a lista."],
   ["#lancarBtn","Lançar um gasto","Toque aqui e escolha: <b>Gasto do dia</b> (pão, mercado, combustível, já pago hoje) ou <b>Conta do mês</b> (aluguel, luz, internet, com vencimento). No valor, digite só os números."],
-  [".a-list","Contas do mês","Toque no ✓ quando pagar e no ✕ se não foi paga. Toque no nome da conta para editar ou excluir."],
+  [".a-list","Contas do mês","Importante: a conta só sai do seu saldo quando você toca no <b>✓</b> para confirmar que pagou. Antes disso ela aparece como “a pagar”. Use o ✕ se não foi paga e toque no nome da conta para editar ou excluir."],
   [".a-gastos","Gastos do dia a dia","Os mais recentes aparecem primeiro. Se quiser, guarde o lugar da compra com “Onde estou”."],
   [".a-ent","Entradas","Cadastre seu salário e outras rendas com o dia em que caem na conta. O app só conta a partir desse dia."],
   [".month","Trocar de mês","Use as setas para ver meses anteriores ou planejar os próximos."],
