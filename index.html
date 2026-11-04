@@ -1023,7 +1023,7 @@ function desenharToggle(qual,n,resumo){
 ["contas","gastos"].forEach(q=>$(q==="contas"?"tglContas":"tglGastos").onclick=()=>{ LISTAS[q]=!LISTAS[q]; try{ localStorage.setItem("frfp-listas",JSON.stringify(LISTAS)); }catch(e){} render(); });
 /* ---------- gastos do dia a dia ---------- */
 const ehGasto=c=>c && c.natureza==="gasto";
-const ATALHOS=[["⛽","Abastecimento","Combustível"],["🅿️","Estacionamento","Estacionamento"],["🛒","Mercado","Compras comida"],["🥖","Padaria","Alimentação"],["🍔","Comida","Alimentação"],["💊","Farmácia","Outros"]];
+const ATALHOS=[["⛽","Abastecimento","Combustível"],["🅿️","Estacionamento","Estacionamento"],["🛒","Mercado","Compras comida"],["🥖","Padaria","Alimentação"],["🍔","Fast Food","Alimentação"],["💊","Farmácia","Outros"]];
 function renderGastos(k,G){
   const ts=c=>Date.parse(c.criado_em||"")||Number(c.criado)||0; G=G.slice().sort((a,b)=>diaNo(b,k)-diaNo(a,k)||ts(b)-ts(a));
   const tot=G.reduce((s,c)=>s+valorNo(c,k),0);
